@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net48;net481;net8.0;net9.0;net10.0</TargetFrameworks>
+    <Authors>EomTaeWook</Authors>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dignus" Version="1.0.12" />
+  </ItemGroup>
+
+</Project>

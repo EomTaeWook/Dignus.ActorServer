@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ConsoleApp/ConsoleApp.csproj" />
+  <Project Path="Dignus.Actor.Core/Dignus.Actor.Core.csproj" Id="767ccd48-6841-4617-a98c-688d49b4cb5c" />
+</Solution>
