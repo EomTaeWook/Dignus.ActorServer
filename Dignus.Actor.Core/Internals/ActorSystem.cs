@@ -9,7 +9,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace Dignus.Actor.Core.Internal
+namespace Dignus.Actor.Core.Internals
 {
     public class ActorSystem
     {

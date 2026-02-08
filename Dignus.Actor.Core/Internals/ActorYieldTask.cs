@@ -7,7 +7,7 @@ using Dignus.Actor.Core.ObjectPools;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Dignus.Actor.Core.Internal
+namespace Dignus.Actor.Core.Internals
 {
     internal class ActorYieldTask : IActorSchedulable
     {

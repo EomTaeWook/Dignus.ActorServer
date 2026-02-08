@@ -11,11 +11,6 @@ using System.Threading.Tasks;
 
 namespace Dignus.Actor.Core.Actors
 {
-    internal interface IActorSchedulable
-    {
-        Task ExecuteAsync();
-    }
-
     internal class ActorRunner(ActorBase actor, ActorDispatcher dispatcher) : IActorSchedulable
     {
         private readonly SynchronizedArrayQueue<ActorMail> _mailbox = [];

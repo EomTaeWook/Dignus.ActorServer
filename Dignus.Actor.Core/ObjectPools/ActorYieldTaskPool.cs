@@ -2,7 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 // Part of Dignus.ActorServer
 
-using Dignus.Actor.Core.Internal;
+using Dignus.Actor.Core.Internals;
 using Dignus.Framework;
 
 namespace Dignus.Actor.Core.ObjectPools
