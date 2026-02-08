@@ -13,7 +13,7 @@ namespace Dignus.Actor.Core.Internal
 {
     public class ActorSystem
     {
-        private readonly ConcurrentDictionary<long, ActorRunner> _actors = new ConcurrentDictionary<long, ActorRunner>();
+        private readonly ConcurrentDictionary<long, ActorRunner> _actors = new();
         private readonly ActorDispatcher[] _dispatchers;
         private long _nextId;
         private readonly int _serverId;

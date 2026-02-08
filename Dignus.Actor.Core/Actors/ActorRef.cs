@@ -13,29 +13,18 @@ namespace Dignus.Actor.Core.Actors
         void Post(IActorMessage message, IActorRef sender = null);
     }
 
-    internal class ActorRef : IActorRef
+    internal class ActorRef(ActorSystem actorSystem, long id) : IActorRef
     {
-        private readonly long _id;
-        private ActorSystem _actorSystem;
-        public ActorRef(ActorSystem actorSystem, long id)
-        {
-            _actorSystem = actorSystem;
-            _id = id;
-        }
-
         public void Dispose()
         {
-            _actorSystem = null;
+            actorSystem = null;
         }
 
         public void Post(IActorMessage message, IActorRef sender = null)
         {
-            if (message == null)
-            {
-                throw new ArgumentNullException(nameof(message));
-            }
+            ArgumentNullException.ThrowIfNull(message);
 
-            _actorSystem.Post(_id, message, sender);
+            actorSystem.Post(id, message, sender);
         }
     }
 }

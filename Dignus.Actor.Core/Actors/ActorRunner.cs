@@ -16,68 +16,74 @@ namespace Dignus.Actor.Core.Actors
         Task ExecuteAsync();
     }
 
-    internal class ActorRunner : IActorSchedulable
+    internal class ActorRunner(ActorBase actor, ActorDispatcher dispatcher) : IActorSchedulable
     {
-        private readonly ActorDispatcher _dispatcher;
-        private readonly ActorBase _actor;
-
-        private readonly SynchronizedArrayQueue<ActorMail> _mailbox = new SynchronizedArrayQueue<ActorMail>();
+        private readonly SynchronizedArrayQueue<ActorMail> _mailbox = [];
         private int _scheduled;
-
-        public ActorRunner(ActorBase actor, ActorDispatcher dispatcher)
-        {
-            _actor = actor;
-            _dispatcher = dispatcher;
-        }
         public void Enqueue(IActorMessage msg, IActorRef sender)
         {
-            var mail = _dispatcher.MailPool.Pop();
+            var mail = dispatcher.MailPool.Pop();
             mail.Message = msg;
             mail.Sender = sender;
             _mailbox.Add(mail);
 
             if (Interlocked.CompareExchange(ref _scheduled, 1, 0) == 0)
             {
-                _dispatcher.Schedule(this);
+                dispatcher.Schedule(this);
             }
         }
         internal void VerifyContext()
         {
-            var actorDispatcher = ActorDispatcher.CurrentActorDispatcher;
-            if (actorDispatcher == null)
-            {
-                throw new InvalidOperationException($"Actor P-{_dispatcher.Id} is running on ThreadPool!");
-            }
+            var actorDispatcher = ActorDispatcher.CurrentActorDispatcher ?? throw new InvalidOperationException($"Actor P-{dispatcher.Id} is running on ThreadPool.");
 
-            if (actorDispatcher.Id != _dispatcher.Id)
+            if (actorDispatcher.Id != dispatcher.Id)
             {
-                throw new InvalidOperationException($"Actor P-{_dispatcher.Id} vs Current P-{actorDispatcher.Id}");
+                throw new InvalidOperationException($"Actor P-{dispatcher.Id} vs Current P-{actorDispatcher.Id}");
             }
         }
         public async Task ExecuteAsync()
         {
             VerifyContext();
-            try
+
+            while (_mailbox.TryRead(out var mail))
             {
-                while(_mailbox.TryRead(out var mail))
+                Task task;
+                try
                 {
-                    try
-                    {
-                        await _actor.OnReceiveInternal(mail.Message, mail.Sender).ConfigureAwait(true);
-                    }
-                    finally
-                    {
-                        mail.Recycle();
-                    }
+                    task = actor.OnReceiveInternal(mail.Message, mail.Sender);
                 }
+                catch
+                {
+                    mail.Recycle();
+                    throw;
+                }
+
+                if (task.IsCompleted)
+                {
+                    if (task.IsFaulted)
+                    {
+                        throw task.Exception;
+                    }
+
+                    mail.Recycle();
+                    continue;
+                }
+
+                try
+                {
+                    await task.ConfigureAwait(true);
+                }
+                finally
+                {
+                    mail.Recycle();
+                }
+                break;
             }
-            finally
+
+            Interlocked.Exchange(ref _scheduled, 0);
+            if (_mailbox.Count > 0 && Interlocked.CompareExchange(ref _scheduled, 1, 0) == 0)
             {
-                Interlocked.Exchange(ref _scheduled, 0);
-                if (_mailbox.Count > 0 && Interlocked.CompareExchange(ref _scheduled, 1, 0) == 0)
-                {
-                    _dispatcher.Schedule(this);
-                }
+                dispatcher.Schedule(this);
             }
         }
     }

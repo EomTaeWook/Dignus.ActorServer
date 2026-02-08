@@ -19,11 +19,11 @@ namespace Dignus.Actor.Core.Dispatcher
 
         private readonly int _dispatcherId;
 
-        private readonly AutoResetEvent _signal = new AutoResetEvent(false);
+        private readonly AutoResetEvent _signal = new(false);
         private readonly Thread _workerThread;
-        private readonly ActorMailPool _actorMailPool = new ActorMailPool();
-        private readonly SynchronizedArrayQueue<IActorSchedulable> _scheduledActors = new SynchronizedArrayQueue<IActorSchedulable>();
-        private readonly ActorYieldTaskPool _yieldTaskPool = new ActorYieldTaskPool();
+        private readonly ActorMailPool _actorMailPool = new();
+        private readonly SynchronizedArrayQueue<IActorSchedulable> _scheduledActors = [];
+        private readonly ActorYieldTaskPool _yieldTaskPool = new();
 
         private int _signalPending = 0;
 

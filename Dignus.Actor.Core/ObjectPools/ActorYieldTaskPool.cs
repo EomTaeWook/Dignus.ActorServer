@@ -9,17 +9,12 @@ namespace Dignus.Actor.Core.ObjectPools
 {
     internal class ActorYieldTaskPool
     {
-        private class InnerYieldTaskPool : ObjectPoolBase<ActorYieldTask>
+        private class InnerYieldTaskPool(ActorYieldTaskPool parent) : ObjectPoolBase<ActorYieldTask>
         {
-            private readonly ActorYieldTaskPool _parent;
-            public InnerYieldTaskPool(ActorYieldTaskPool parent)
-            {
-                _parent = parent;
-            }
             public override ActorYieldTask CreateItem()
             {
                 var item = new ActorYieldTask();
-                item.SetPool(_parent);
+                item.SetPool(parent);
                 return item;
             }
             public override void Remove(ActorYieldTask item)
