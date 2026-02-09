@@ -4,21 +4,21 @@
 
 using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Core.Messages;
-using Dignus.Actor.Network.Serializer;
 using Dignus.Sockets.Interfaces;
+using System.Threading.Tasks;
 
 namespace Dignus.Actor.Network.Actors
 {
-    public class NetworkActor(ISession session, IMessageSerializer serializer) : IActorRef
+    public class ConnectionActor(ISession session) : ActorBase
     {
         public void Dispose()
         {
             session.Dispose();
         }
 
-        public void Post(IActorMessage message, IActorRef sender = null)
+        protected override Task OnReceive(IActorMessage message, IActorRef sender = null)
         {
-            session.Send(serializer.MakeSendBuffer(message));
+            return Task.CompletedTask;
         }
     }
 }

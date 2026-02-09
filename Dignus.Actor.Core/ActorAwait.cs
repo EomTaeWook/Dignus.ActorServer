@@ -23,10 +23,7 @@ namespace Dignus.Actor.Core
         }
         internal static ActorAwaiter Join(ActorDispatcher dispatcher)
         {
-            if (dispatcher == null)
-            {
-                throw new ArgumentNullException(nameof(dispatcher));
-            }
+            ArgumentNullException.ThrowIfNull(dispatcher);
 
             return new ActorAwaiter(dispatcher);
         }

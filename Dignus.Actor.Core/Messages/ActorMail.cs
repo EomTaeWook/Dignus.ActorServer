@@ -1,8 +1,8 @@
-﻿using Dignus.Actor.Core.Actors;
-// Copyright (c) 2026 EomTaeWook
+﻿// Copyright (c) 2026 EomTaeWook
 // Licensed under the MIT License. See LICENSE file in the project root.
 // Part of Dignus.ActorServer
 
+using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Core.ObjectPools;
 using System;
 
@@ -13,8 +13,12 @@ namespace Dignus.Actor.Core.Messages
         public IActorMessage Message { get; set; }
         public IActorRef Sender { get; set; }
 
-        private ActorMailPool _pool;
-        internal void SetPool(ActorMailPool pool) => _pool = pool;
+        private readonly ActorMailPool _pool;
+
+        internal ActorMail(ActorMailPool pool)
+        {
+            _pool = pool;
+        }
 
         public void Recycle()
         {

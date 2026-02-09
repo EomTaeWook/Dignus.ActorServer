@@ -9,23 +9,22 @@ namespace Dignus.Actor.Core.ObjectPools
 {
     internal class ActorMailPool
     {
-        private class InnerActorMailPool(ActorMailPool parent) : ObjectPoolBase<ActorMail>
+        private class InnerPool(ActorMailPool parent) : ObjectPoolBase<ActorMail>
         {
             public override ActorMail CreateItem()
             {
-                var item = new ActorMail();
-                item.SetPool(parent);
+                var item = new ActorMail(parent);
                 return item;
             }
             public override void Remove(ActorMail item)
             {
             }
         }
-        private readonly InnerActorMailPool _pool;
+        private readonly InnerPool _pool;
 
         public ActorMailPool()
         {
-            _pool = new InnerActorMailPool(this);
+            _pool = new InnerPool(this);
         }
         
         public ActorMail Pop()

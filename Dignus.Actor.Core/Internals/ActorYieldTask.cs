@@ -13,13 +13,17 @@ namespace Dignus.Actor.Core.Internals
     {
         private SendOrPostCallback _callback;
         private object _state;
-        private ActorYieldTaskPool _pool;
+        private readonly ActorYieldTaskPool _pool;
+
+        internal ActorYieldTask(ActorYieldTaskPool pool)
+        {
+            _pool = pool;
+        }
         public void Set(SendOrPostCallback callback, object state)
         {
             _callback = callback;
             _state = state;
         }
-        internal void SetPool(ActorYieldTaskPool pool) => _pool = pool;
 
         public void Clear()
         {

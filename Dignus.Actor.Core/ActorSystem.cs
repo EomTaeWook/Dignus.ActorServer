@@ -4,12 +4,13 @@
 
 using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Core.Dispatcher;
+using Dignus.Actor.Core.Internals;
 using Dignus.Actor.Core.Messages;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace Dignus.Actor.Core.Internals
+namespace Dignus.Actor.Core
 {
     public class ActorSystem
     {
@@ -29,15 +30,22 @@ namespace Dignus.Actor.Core.Internals
         }
         public IActorRef Spawn<TActor>() where TActor : ActorBase, new()
         {
+            return SpawnInternal(new TActor());
+        }
+        public IActorRef Spawn<TActor>(Func<TActor> factory) where TActor : ActorBase
+        {
+            return SpawnInternal(factory());
+        }
+
+        private IActorRef SpawnInternal<TActor>(TActor actor) where TActor : ActorBase
+        {
             long id = Interlocked.Increment(ref _nextId);
             int dispatcherIndex = (int)(id % _dispatchers.Length);
             long actorId = ActorIdHelper.CreateId(_serverId, dispatcherIndex, id);
 
-            var actorRef = new ActorRef(this, actorId);
-            var actor = new TActor()
-            {
-                Self = actorRef
-            };
+            IActorRef actorRef = new ActorRef(this, actorId);
+
+            actor.Self = actorRef;
 
             var dispatcher = _dispatchers[dispatcherIndex];
 
@@ -49,8 +57,10 @@ namespace Dignus.Actor.Core.Internals
             {
                 throw new InvalidOperationException($"Duplicate actor id.{actorId}");
             }
+
             return actorRef;
         }
+
         internal void Post(long targetId, IActorMessage message, IActorRef sender)
         {
             if (_actors.TryGetValue(targetId, out var actor) == false)
