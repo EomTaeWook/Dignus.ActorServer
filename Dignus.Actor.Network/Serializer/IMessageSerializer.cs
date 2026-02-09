@@ -6,7 +6,7 @@ using Dignus.Actor.Core.Messages;
 using Dignus.Sockets.Interfaces;
 using System;
 
-namespace Dignus.Actor.Core.Serializer
+namespace Dignus.Actor.Network.Serializer
 {
     public interface IMessageSerializer : IPacketSerializer
     {

@@ -55,23 +55,26 @@ namespace Dignus.Actor.Core.Actors
 
                 if (task.IsCompleted)
                 {
+                    mail.Recycle();
+
                     if (task.IsFaulted)
                     {
                         throw task.Exception;
                     }
-
-                    mail.Recycle();
                     continue;
                 }
 
                 try
                 {
-                    await task.ConfigureAwait(true);
+                    await task.ConfigureAwait(false);
                 }
                 finally
                 {
                     mail.Recycle();
                 }
+
+                await ActorAwait.Join(dispatcher);
+                VerifyContext();
                 break;
             }
 

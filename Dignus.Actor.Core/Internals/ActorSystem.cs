@@ -40,6 +40,9 @@ namespace Dignus.Actor.Core.Internals
             };
 
             var dispatcher = _dispatchers[dispatcherIndex];
+
+            actor.SetDispatcher(dispatcher);
+
             var runner = new ActorRunner(actor, dispatcher);
 
             if (_actors.TryAdd(actorId, runner) == false)

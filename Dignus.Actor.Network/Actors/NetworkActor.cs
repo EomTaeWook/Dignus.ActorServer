@@ -4,10 +4,10 @@
 
 using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Core.Messages;
-using Dignus.Actor.Core.Serializer;
+using Dignus.Actor.Network.Serializer;
 using Dignus.Sockets.Interfaces;
 
-namespace Dignus.Actor.Core.Networks
+namespace Dignus.Actor.Network.Actors
 {
     public class NetworkActor(ISession session, IMessageSerializer serializer) : IActorRef
     {
