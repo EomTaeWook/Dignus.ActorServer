@@ -8,12 +8,10 @@ using System;
 
 namespace Dignus.Actor.Network.Serializer
 {
-    public interface IMessageSerializer : IPacketSerializer
+    public interface IActorMessageSerializer : IPacketSerializer
     {
         ArraySegment<byte> MakeSendBuffer(IActorMessage packet);
 
         IActorMessage Deserialize(ArraySegment<byte> bytes);
-
-        IActorMessage Deserialize(byte[] bytes);
     }
 }

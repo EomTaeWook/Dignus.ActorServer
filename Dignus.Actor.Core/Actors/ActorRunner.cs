@@ -15,6 +15,11 @@ namespace Dignus.Actor.Core.Actors
     {
         private readonly SynchronizedArrayQueue<ActorMail> _mailbox = [];
         private int _scheduled;
+
+        public IActorRef GetActorRef() 
+        {
+            return actor.Self;
+        }
         public void Enqueue(IActorMessage msg, IActorRef sender)
         {
             var mail = dispatcher.MailPool.Pop();

@@ -14,7 +14,10 @@ namespace Dignus.Actor.Core.Actors
 
         protected abstract Task OnReceive(IActorMessage message, IActorRef sender = null);
 
-        internal ActorDispatcher _actorDispatcher;
+        internal ActorDispatcher ActorDispatcher => _actorDispatcher;
+
+        private ActorDispatcher _actorDispatcher;
+
         internal Task OnReceiveInternal(IActorMessage message, IActorRef sender)
         {
             return OnReceive(message, sender);

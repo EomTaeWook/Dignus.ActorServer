@@ -19,7 +19,7 @@ namespace Dignus.Actor.Core
         }
         public static ActorAwaiter Join(ActorBase actorBase)
         {
-            return Join(actorBase._actorDispatcher);
+            return Join(actorBase.ActorDispatcher);
         }
         internal static ActorAwaiter Join(ActorDispatcher dispatcher)
         {

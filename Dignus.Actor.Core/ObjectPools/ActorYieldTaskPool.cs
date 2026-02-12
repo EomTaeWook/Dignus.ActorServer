@@ -28,7 +28,10 @@ namespace Dignus.Actor.Core.ObjectPools
             _pool = new InnerPool(this);
         }
 
-        public ActorYieldTask Pop() => _pool.Pop();
+        public ActorYieldTask Pop()
+        {
+            return _pool.Pop();
+        }
 
         public void Push(ActorYieldTask item)
         {

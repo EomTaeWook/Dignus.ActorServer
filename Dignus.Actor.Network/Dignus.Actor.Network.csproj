@@ -7,11 +7,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dignus.Sockets" Version="1.2.0" />
+    <ProjectReference Include="..\Dignus.Actor.Core\Dignus.Actor.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dignus.Actor.Core\Dignus.Actor.Core.csproj" />
+    <Reference Include="Dignus">
+      <HintPath>..\..\Dignus\publish\dll\net8.0\Dignus.dll</HintPath>
+    </Reference>
+    <Reference Include="Dignus.Sockets">
+      <HintPath>..\..\Dignus\publish\dll\net8.0\Dignus.Sockets.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Internals\" />
+    <Folder Include="ObjectPools\" />
   </ItemGroup>
 
 </Project>

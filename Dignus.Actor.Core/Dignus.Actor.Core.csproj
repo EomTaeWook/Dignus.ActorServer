@@ -8,7 +8,13 @@
 
   <ItemGroup>
     <PackageReference Include="Dignus" Version="1.0.12" />
-    <PackageReference Include="Dignus.Sockets" Version="1.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <!-- We use the value of AssemblyName to declare the value of the attribute -->
+      <_Parameter1>Dignus.Actor.Network</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
 </Project>

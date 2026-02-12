@@ -5,37 +5,71 @@
 using Dignus.Actor.Core;
 using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Network.Actors;
+using Dignus.Actor.Network.Processor;
+using Dignus.Actor.Network.Serializer;
+using Dignus.Sockets;
 using Dignus.Sockets.Interfaces;
 using Dignus.Sockets.Tls;
+using System;
 
 namespace Dignus.Actor.Network
 {
-    public abstract class ActorTlsServerBase : TlsServerBase
+    public abstract class ActorTlsServerBase<TSessionActor> : TlsServerBase where TSessionActor : SessionActor
     {
-        protected abstract void OnAccepted(IActorRef connectedActorRef);
+        protected abstract TSessionActor CreateSessionActor(IActorRef transportActorRef);
+        protected abstract void OnSessionAccepted(TSessionActor connectedActorRef);
         protected abstract void OnDisconnected(IActorRef connectedActorRef);
 
         private readonly ActorSystem _actorSystem;
 
+        private readonly ActorPacketProcessor _processor;
+        private IActorMessageSerializer _actorMessageSerializer;
+
+
         public ActorTlsServerBase(ActorSystem actorSystem,
-            ActorSessionConfiguration sessionConfiguration,
+            IActorMessageSerializer actorMessageSerializer,
+            ActorPacketProcessor actorPacketProcessor,
             TlsServerOptions tlsServerOptions,
-            int initialSessionPoolSize = 0) :base(null, tlsServerOptions, initialSessionPoolSize)
+            SocketOption socketOption = null,
+            int initialSessionPoolSize = 0) :base(CreateSessionConfigurationFactory(actorMessageSerializer, actorPacketProcessor, socketOption), tlsServerOptions, initialSessionPoolSize)
         {
+            ArgumentNullException.ThrowIfNull(actorSystem);
+            ArgumentNullException.ThrowIfNull(actorMessageSerializer);
+            ArgumentNullException.ThrowIfNull(actorPacketProcessor);
+
+            _actorMessageSerializer = actorMessageSerializer;
             _actorSystem = actorSystem;
+            _processor = actorPacketProcessor;
         }
         protected override void OnAccepted(ISession session)
         {
-            var actorRef = _actorSystem.Spawn(() => new ConnectionActor(session));
-            OnAccepted(actorRef);
+            IActorRef transportActorRef = _actorSystem.Spawn(() => new TransportActor(session, _actorMessageSerializer));
+
+            var sessionActor = CreateSessionActor(transportActorRef);
+
+            OnSessionAccepted(sessionActor);
         }
+
+
         protected override void OnDisconnected(ISession session)
         {
-            OnDisconnected(null);
+            
         }
 
         protected override void OnHandshaking(ISession session)
         {   
+        }
+
+        private static SessionSetupFactoryDelegate CreateSessionSetupFactory(IActorMessageSerializer serializer, ActorPacketProcessor processor)
+        {
+            return () => { return new SessionSetup(serializer, processor, null); };
+        }
+        private static SessionConfiguration CreateSessionConfigurationFactory(
+            IActorMessageSerializer serializer,
+            ActorPacketProcessor processor,
+            SocketOption socketOption = null)
+        {
+            return new SessionConfiguration(CreateSessionSetupFactory(serializer, processor), socketOption);
         }
     }
 }

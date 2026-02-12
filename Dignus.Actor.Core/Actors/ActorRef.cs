@@ -7,23 +7,37 @@ using System;
 
 namespace Dignus.Actor.Core.Actors
 {
-    public interface IActorRef : IDisposable
+    public interface IActorRef
     {
         void Post(IActorMessage message, IActorRef sender = null);
     }
 
-    internal class ActorRef(ActorSystem actorSystem, long id) : IActorRef
+    internal class ActorRef : IActorRef
     {
+        private ActorSystem _actorSystem;
+        private readonly long _id;
+        public ActorRef(ActorSystem actorSystem, long id)
+        {
+            _actorSystem = actorSystem;
+            _id = id;
+        }
+
         public void Dispose()
         {
-            actorSystem = null;
+            _actorSystem = null;
         }
 
         public void Post(IActorMessage message, IActorRef sender = null)
         {
             ArgumentNullException.ThrowIfNull(message);
 
-            actorSystem.Post(id, message, sender);
+            var actorSystem = _actorSystem;
+
+            if(actorSystem == null)
+            {
+                return;
+            }
+            actorSystem.Post(_id, message, sender);
         }
     }
 }

@@ -28,6 +28,14 @@ namespace Dignus.Actor.Core
                 _dispatchers[i].Start();
             }
         }
+        public IActorRef FindActorRef(long actorId)
+        {
+            if (_actors.TryGetValue(actorId, out var actor) == true)
+            {
+                return actor.GetActorRef();
+            }
+            return null;
+        }
         public IActorRef Spawn<TActor>() where TActor : ActorBase, new()
         {
             return SpawnInternal(new TActor());
@@ -48,9 +56,7 @@ namespace Dignus.Actor.Core
             actor.Self = actorRef;
 
             var dispatcher = _dispatchers[dispatcherIndex];
-
-            actor.SetDispatcher(dispatcher);
-
+       
             var runner = new ActorRunner(actor, dispatcher);
 
             if (_actors.TryAdd(actorId, runner) == false)
