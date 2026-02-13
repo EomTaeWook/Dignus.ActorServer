@@ -11,4 +11,10 @@
     <ProjectReference Include="..\Dignus.Actor.Network\Dignus.Actor.Network.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="Dignus.Sockets">
+      <HintPath>..\..\Dignus\publish\dll\net8.0\Dignus.Sockets.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

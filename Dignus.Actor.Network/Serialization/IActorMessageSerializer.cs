@@ -6,12 +6,10 @@ using Dignus.Actor.Core.Messages;
 using Dignus.Sockets.Interfaces;
 using System;
 
-namespace Dignus.Actor.Network.Serializer
+namespace Dignus.Actor.Network.Serialization
 {
     public interface IActorMessageSerializer : IPacketSerializer
     {
         ArraySegment<byte> MakeSendBuffer(IActorMessage packet);
-
-        IActorMessage Deserialize(ArraySegment<byte> bytes);
     }
 }

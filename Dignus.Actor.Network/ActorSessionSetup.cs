@@ -2,10 +2,10 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 // Part of Dignus.ActorServer
 
-using Dignus.Actor.Network.Processor;
-using Dignus.Actor.Network.Serializer;
+using Dignus.Actor.Network.Serialization;
 using Dignus.Sockets;
 using Dignus.Sockets.Interfaces;
+using Dignus.Sockets.Processing;
 using System;
 using System.Collections.Generic;
 
@@ -17,7 +17,7 @@ namespace Dignus.Actor.Network
 
         private readonly SessionSetup _sessionSetup;
         public ActorSessionSetup(IActorMessageSerializer serializer,
-            ActorPacketProcessor packetProcessor,
+            PacketProcessor packetProcessor,
             ICollection<ISessionComponent> components)
         {
             ArgumentNullException.ThrowIfNull(serializer);

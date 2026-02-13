@@ -19,9 +19,4 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Internals\" />
-    <Folder Include="ObjectPools\" />
-  </ItemGroup>
-
 </Project>
