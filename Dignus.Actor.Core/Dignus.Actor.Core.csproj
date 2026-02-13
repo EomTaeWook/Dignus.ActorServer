@@ -4,6 +4,9 @@
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <Authors>EomTaeWook</Authors>
     <Nullable>disable</Nullable>
+    <Title>Dignus.Actor.Core</Title>
+    <Version>1.0.0</Version>
+    <Copyright>© 2021–2026 EomTaeWook. Released under the MIT License.</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

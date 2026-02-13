@@ -4,7 +4,14 @@
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <Authors>EomTaeWook</Authors>
     <Nullable>disable</Nullable>
+    <Title>Dignus.Actor.Network</Title>
+    <Version>1.0.0</Version>
+    <AssemblyName>Dignus.Actor.Network</AssemblyName>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dignus.Sockets" Version="1.2.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Dignus.Actor.Core\Dignus.Actor.Core.csproj" />

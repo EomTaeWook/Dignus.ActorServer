@@ -1,0 +1,65 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+
+    <PackageId>Dignus.ActorServer</PackageId>
+    <Title>Dignus.ActorServer</Title>
+    <Authors>EomTaeWook</Authors>
+    <Nullable>disable</Nullable>
+
+    <Version>1.0.0</Version>
+    <Copyright>© 2021–2026 EomTaeWook. Released under the MIT License.</Copyright>
+
+    <IsPackable>true</IsPackable>
+
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+
+    <PackageIcon>Icon.jpg</PackageIcon>
+
+    <RepositoryUrl>https://github.com/EomTaeWook/Dignus.ActorServer</RepositoryUrl>
+
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+
+    <PackageProjectUrl>https://github.com/EomTaeWook/Dignus.ActorServer</PackageProjectUrl>
+
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\publish\Icon.jpg">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dignus.Actor.Core\Dignus.Actor.Core.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Dignus.Actor.Network\Dignus.Actor.Network.csproj" ReferenceOutputAssembly="false" />
+
+  </ItemGroup>
+
+  <ItemGroup>
+    <TfmSpecificPackageFile Include="..\Dignus.Actor.Core\bin\$(Configuration)\$(TargetFramework)\Dignus.Actor.Core.dll" PackagePath="lib\$(TargetFramework)\" />
+    <TfmSpecificPackageFile Include="..\Dignus.Actor.Network\bin\$(Configuration)\$(TargetFramework)\Dignus.Actor.Network.dll" PackagePath="lib\$(TargetFramework)\" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Release'">
+    <Exec Command="xcopy /Y &quot;$(TargetDir)$(TargetName).dll&quot; &quot;$(SolutionDir)publish\dll\$(TargetFramework)\&quot;" />
+  </Target>
+
+  <Target Name="PostPack" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
+    <Exec Command="xcopy /Y &quot;$(OutputPath)*.nupkg&quot; &quot;$(SolutionDir)publish\nuget\&quot;" />
+  </Target>
+  
+</Project>

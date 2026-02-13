@@ -34,6 +34,7 @@ namespace Dignus.Actor.Network.Actors
             {
                 return Task.CompletedTask;
             }
+
             if (message is RawMessage rawMessage)
             {
                 session.Send(rawMessage.Data);
