@@ -19,7 +19,7 @@ namespace Dignus.Actor.Core
         }
         public static ActorAwaiter Join(ActorBase actorBase)
         {
-            return Join(actorBase.ActorDispatcher);
+            return Join(actorBase.Dispatcher);
         }
         internal static ActorAwaiter Join(ActorDispatcher dispatcher)
         {
@@ -31,7 +31,6 @@ namespace Dignus.Actor.Core
         {
             return new ActorAwaiter(_dispatcher);
         }
-
 
         public readonly struct ActorAwaiter : ICriticalNotifyCompletion
         {

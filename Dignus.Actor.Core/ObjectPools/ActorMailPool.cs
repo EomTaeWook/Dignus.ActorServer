@@ -35,6 +35,10 @@ namespace Dignus.Actor.Core.ObjectPools
 
         public void Push(ActorMail item)
         {
+            if(item == null)
+            {
+
+            }
             _pool.Push(item);
         }
     }

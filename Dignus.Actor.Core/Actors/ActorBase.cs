@@ -10,21 +10,33 @@ namespace Dignus.Actor.Core.Actors
 {
     public abstract class ActorBase 
     {
-        public IActorRef Self { get; internal set; }
+        public IActorRef Self => SelfRef;
 
-        protected abstract Task OnReceive(IActorMessage message, IActorRef sender = null);
+        internal ActorRef SelfRef { get; private set; }
 
-        internal ActorDispatcher ActorDispatcher => _actorDispatcher;
+        protected abstract Task OnReceive(IActorMessage message, IActorRef sender);
 
-        private ActorDispatcher _actorDispatcher;
+        internal ActorDispatcher Dispatcher { get; private set; }
 
         internal Task OnReceiveInternal(IActorMessage message, IActorRef sender)
         {
             return OnReceive(message, sender);
         }
-        internal void SetDispatcher(ActorDispatcher dispatcher)
+        internal virtual void Cleanup()
         {
-            _actorDispatcher = dispatcher;
+            SelfRef.Invalidate();
         }
+        internal void Bind(ActorDispatcher actorDispatcher, ActorRef actorRef)
+        {
+            Dispatcher = actorDispatcher;
+            SelfRef = actorRef;
+        }
+
+        public void Post(IActorRef targetRef, IActorMessage message)
+        {
+            targetRef.Post(message, Self);
+        }
+        
+        public virtual void OnKill() { }
     }
 }

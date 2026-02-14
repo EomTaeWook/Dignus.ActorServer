@@ -25,14 +25,6 @@ namespace Dignus.Actor.Core
                 _dispatchers[i].Start();
             }
         }
-        public IActorRef FindActorRef(int actorId)
-        {
-            if (_actors.TryGetValue(actorId, out var actor) == true)
-            {
-                return actor.GetActorRef();
-            }
-            return null;
-        }
         public IActorRef Spawn<TActor>() where TActor : ActorBase, new()
         {
             return SpawnInternal(new TActor());
@@ -42,18 +34,18 @@ namespace Dignus.Actor.Core
             return SpawnInternal(factory());
         }
 
-        private IActorRef SpawnInternal<TActor>(TActor actor) where TActor : ActorBase
+        private ActorRef SpawnInternal<TActor>(TActor actor) where TActor : ActorBase
         {
             int id = Interlocked.Increment(ref _nextId);
 
-            IActorRef actorRef = new ActorRef(this, id);
-
-            actor.Self = actorRef;
-
             int dispatcherIndex = id % _dispatchers.Length;
             var dispatcher = _dispatchers[dispatcherIndex];
-       
-            var runner = new ActorRunner(actor, dispatcher);
+
+            ActorRef actorRef = new(this, id);
+
+            actor.Bind(dispatcher, actorRef);
+
+            var runner = new ActorRunner(actor, dispatcher, FinalizeKill);
 
             if (_actors.TryAdd(id, runner) == false)
             {
@@ -72,9 +64,16 @@ namespace Dignus.Actor.Core
 
             actor.Enqueue(message, sender);
         }
-        internal bool TryRemove(int actorId, out ActorRunner runner)
+        internal void Kill(int actorId)
         {
-            return _actors.TryRemove(actorId, out runner);
+            if (_actors.TryGetValue(actorId, out var actor))
+            {
+                actor.Kill();
+            }
+        }
+        internal void FinalizeKill(int actorId)
+        {
+            _actors.TryRemove(actorId, out _);
         }
     }
 }

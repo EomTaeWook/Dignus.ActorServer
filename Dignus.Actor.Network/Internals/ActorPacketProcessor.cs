@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 // Part of Dignus.ActorServer
 
+using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Network.Protocol;
 using Dignus.Collections;
 using Dignus.Sockets.Interfaces;
@@ -16,13 +17,10 @@ namespace Dignus.Actor.Network.Internals
     {
         protected override Task ProcessPacketAsync(ISession session, ArraySegment<byte> packet)
         {
-            var actorRef = actorRefProvider.GetActorRef(session.Id);
-
-            if(actorRef == null)
+            if (!actorRefProvider.TryGetActorRef(session.Id, out IActorRef actorRef))
             {
                 return Task.CompletedTask;
             }
-
             var message = decoder.Deserialize(packet);
 
             actorRef.Post(message);

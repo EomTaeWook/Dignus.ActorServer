@@ -19,13 +19,12 @@ namespace Dignus.Actor.Core.Dispatcher
 
         private readonly int _dispatcherId;
 
-        private readonly AutoResetEvent _signal = new(false);
+        private readonly ManualResetEventSlim _signal = new(false);
+
         private readonly Thread _workerThread;
         private readonly ActorMailPool _actorMailPool = new();
         private readonly SynchronizedArrayQueue<IActorSchedulable> _scheduledActors = [];
         private readonly ActorYieldTaskPool _yieldTaskPool = new();
-
-        private int _signalPending = 0;
 
         private volatile bool _isStopped;
         private readonly DispatcherSynchronizationContext _syncContext;
@@ -50,20 +49,29 @@ namespace Dignus.Actor.Core.Dispatcher
         {
             CurrentActorDispatcher = this;
             SynchronizationContext.SetSynchronizationContext(_syncContext);
+            SpinWait spinWait = new();
 
             while (!_isStopped)
             {
-                while (_scheduledActors.TryRead(out var actorSchedulable))
+                while (_scheduledActors.TryRead(out IActorSchedulable actorSchedulable))
                 {
-                    actorSchedulable.ExecuteAsync();
+                    actorSchedulable.Execute();
+                    spinWait.Reset();
                 }
-                Interlocked.Exchange(ref _signalPending, 0);
 
-                if (_scheduledActors.Count > 0)
+                if (_isStopped)
+                {
+                    break;
+                }
+
+                spinWait.SpinOnce();
+                if (spinWait.Count < 30)
                 {
                     continue;
                 }
-                _signal.WaitOne();
+
+                _signal.Wait();
+                _signal.Reset();
             }
             CurrentActorDispatcher = null;
             SynchronizationContext.SetSynchronizationContext(null);
@@ -81,10 +89,7 @@ namespace Dignus.Actor.Core.Dispatcher
         internal void Schedule(IActorSchedulable actor)
         {
             _scheduledActors.Add(actor);
-            if (Interlocked.CompareExchange(ref _signalPending, 1, 0) == 0)
-            {
-                _signal.Set();
-            }
+            _signal.Set();
         }
         internal void EnqueueContinuation(SendOrPostCallback sendOrPostCallback, object state)
         {

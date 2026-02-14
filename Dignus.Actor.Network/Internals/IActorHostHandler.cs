@@ -10,6 +10,10 @@ namespace Dignus.Actor.Network.Internals
     {
         void OnAccepted(ISession session);
         void OnDisconnected(ISession session);
+    }
+
+    internal interface IActorTlsHostHandler : IActorHostHandler
+    {
         void OnHandshaking(ISession session);
     }
 }

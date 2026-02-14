@@ -3,13 +3,13 @@ using ConsoleApp.Networks;
 using ConsoleApp.Networks.PacketFramer;
 using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Network;
-using System.Security.Cryptography.X509Certificates;
+using Dignus.Log;
 
 namespace ConsoleApp
 {
-    internal class EchoServer : ActorTlsServerBase<PlayerActor>
+    internal class EchoServer : TcpServerBase<PlayerActor>
     {
-        public EchoServer(X509Certificate2 serverCertificate) : base(serverCertificate, new MessageSerializer(), new MyPacketFramer())
+        public EchoServer() : base(new MessageSerializer(), new MyPacketFramer())
         {
             
         }
@@ -20,12 +20,12 @@ namespace ConsoleApp
 
         protected override void OnAccepted(IActorRef connectedActorRef)
         {
-            
+            LogHelper.Info($"OnAccepted : {connectedActorRef}");
         }
 
         protected override void OnDisconnected(IActorRef connectedActorRef)
         {
-            
+            LogHelper.Info($"OnDisconnected : {connectedActorRef}");
         }
      }
 }

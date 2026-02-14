@@ -1,9 +1,9 @@
-﻿using ConsoleApp.Messages;
-using Dignus.Actor.Core.Messages;
+﻿using Dignus.Actor.Core.Messages;
+using Dignus.Actor.Network.Messages;
 using Dignus.Actor.Network.Protocol;
 using Dignus.Collections;
+using Dignus.Sockets;
 using Dignus.Sockets.Interfaces;
-using System.Text;
 
 namespace ConsoleApp.Networks.PacketFramer
 {
@@ -11,19 +11,14 @@ namespace ConsoleApp.Networks.PacketFramer
     {
         public IActorMessage Deserialize(ReadOnlySpan<byte> packet)
         {
-            var json = Encoding.UTF8.GetString(packet);
-
-            return new JsonMessage()
-            {
-                Body = json
-            };
+            return new BinaryMessage(packet.ToArray());
         }
 
         public bool TryFrame(ISession session, ArrayQueue<byte> buffer, out ArraySegment<byte> packet, out int consumedBytes)
         {
-            packet = null;
-            consumedBytes = 0;
-            return true;
+            consumedBytes = buffer.Count;
+
+            return buffer.TrySlice(out packet, consumedBytes);
         }
     }
 }

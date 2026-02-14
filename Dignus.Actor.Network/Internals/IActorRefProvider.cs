@@ -8,6 +8,6 @@ namespace Dignus.Actor.Network.Internals
 {
     internal interface IActorRefProvider
     {
-        IActorRef GetActorRef(int sessionId);
+        bool TryGetActorRef(int sessionId, out IActorRef actorRef);
     }
 }

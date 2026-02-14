@@ -2,7 +2,7 @@
 
 namespace Dignus.Actor.Network.Messages
 {
-    public class RawMessage(byte[] bytes) : IActorMessage
+    public class BinaryMessage(byte[] bytes) : IActorMessage
     {
         public byte[] Data { get; } = bytes;
     }

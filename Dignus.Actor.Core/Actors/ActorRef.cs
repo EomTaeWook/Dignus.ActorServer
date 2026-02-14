@@ -10,18 +10,21 @@ namespace Dignus.Actor.Core.Actors
     public interface IActorRef
     {
         void Post(IActorMessage message, IActorRef sender = null);
+
+        void Kill();
     }
 
     internal class ActorRef(ActorSystem actorSystem, int id) : IActorRef
     {
+        public override string ToString()
+        {
+            return $"{base.ToString()} id: {id}";
+        }
+        public int Id => id;
+
         private ActorSystem _actorSystem = actorSystem;
 
-        public void Dispose()
-        {
-            _actorSystem = null;
-        }
-
-        public void Post(IActorMessage message, IActorRef sender = null)
+        public void Post(IActorMessage message, IActorRef sender)
         {
             ArgumentNullException.ThrowIfNull(message);
 
@@ -32,6 +35,21 @@ namespace Dignus.Actor.Core.Actors
                 return;
             }
             actorSystem.Post(id, message, sender);
+        }
+
+        public void Kill()
+        {
+            var actorSystem = _actorSystem;
+            if (actorSystem == null)
+            {
+                return;
+            }
+            actorSystem.Kill(id);
+        }
+        
+        public void Invalidate()
+        {
+            _actorSystem = null;
         }
     }
 }

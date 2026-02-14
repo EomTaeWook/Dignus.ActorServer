@@ -10,23 +10,10 @@ using System.Threading.Tasks;
 
 namespace Dignus.Actor.Network.Actors
 {
-    public class TransportActor(ISession session) : ActorBase
+    public sealed class TransportActor(ISession session) : ActorBase
     {
         private ISession _session = session;
-
-        public void Dispose()
-        {
-            var session = _session;
-
-            if (session == null)
-            {
-                return;
-            }
-            _session = null;
-            session.Dispose();
-        }
-
-        protected override Task OnReceive(IActorMessage message, IActorRef sender = null)
+        protected override Task OnReceive(IActorMessage message, IActorRef sender)
         {
             var session = _session;
 
@@ -35,11 +22,24 @@ namespace Dignus.Actor.Network.Actors
                 return Task.CompletedTask;
             }
 
-            if (message is RawMessage rawMessage)
+            if (message is BinaryMessage rawMessage)
             {
-                session.Send(rawMessage.Data);
+                session.SendAsync(rawMessage.Data);
             }
             return Task.CompletedTask;
+        }
+        internal override void Cleanup()
+        {
+            base.Cleanup();
+        }
+        public override void OnKill()
+        {
+            var session = _session;
+            if (session != null)
+            {
+                session.Dispose();
+                _session = null;
+            }
         }
     }
 }

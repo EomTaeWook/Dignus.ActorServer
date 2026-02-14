@@ -5,7 +5,9 @@
 using Dignus.Actor.Core;
 using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Network.Actors;
+using Dignus.Actor.Network.Hosts;
 using Dignus.Actor.Network.Internals;
+using Dignus.Actor.Network.Options;
 using Dignus.Actor.Network.Protocol;
 using Dignus.Actor.Network.Serialization;
 using Dignus.Sockets;
@@ -17,7 +19,8 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Dignus.Actor.Network
 {
-    public abstract class ActorTlsServerBase<TSessionActor> : IActorHostHandler, IActorRefProvider where TSessionActor : SessionActor
+    public abstract class TlsServerBase<TSessionActor> : IActorTlsHostHandler, IActorRefProvider
+        where TSessionActor : SessionActor
     {
         protected abstract TSessionActor CreateSessionActor(IActorRef transportActorRef);
         protected abstract void OnAccepted(IActorRef connectedActorRef);
@@ -31,16 +34,16 @@ namespace Dignus.Actor.Network
 
         private readonly ConcurrentDictionary<int, IActorRef> _sessionActors = new();
 
-        public ActorTlsServerBase(X509Certificate2 serverCertificate,
-            IActorMessageSerializer actorMessageSerializer,
-            IMessageDecoder decoder) : this(ActorTlsServerOptions.Builder()
+        public TlsServerBase(X509Certificate2 serverCertificate,
+            IActorMessageSerializer serializer,
+            IMessageDecoder decoder) : this(TlsServerOptions.Builder()
                                             .UseCertificate(serverCertificate)
-                                            .UseSerializer(actorMessageSerializer)
+                                            .UseSerializer(serializer)
                                             .UseDecoder(decoder).Build())
         {
         }
 
-        public ActorTlsServerBase(ActorTlsServerOptions options)
+        public TlsServerBase(TlsServerOptions options)
         {
             ArgumentNullException.ThrowIfNull(options);
             ArgumentNullException.ThrowIfNull(options.Network);
@@ -50,10 +53,7 @@ namespace Dignus.Actor.Network
 
             _actorNetworkOptions = options.Network;
 
-            if(options.ActorSystem == null)
-            {
-                options.ActorSystem = new ActorSystemOptions();
-            }
+            options.ActorSystem ??= new ActorSystemOptions();
 
             _actorSystem = new ActorSystem(options.ActorSystem.DispatcherThreadCount);
 
@@ -94,7 +94,7 @@ namespace Dignus.Actor.Network
         }
 
         private SessionConfiguration CreateHostConfigurationFactory(
-            ActorTlsServerOptions options)
+            TlsServerOptions options)
         {
             return new SessionConfiguration(CreateSessionFactory, options.Network.SocketOption);
         }
@@ -107,22 +107,18 @@ namespace Dignus.Actor.Network
         {
             if (_sessionActors.TryRemove(session.Id, out var sessionRef))
             {
+                sessionRef.Kill();
                 OnDisconnected(sessionRef);
             }
         }
 
-        void IActorHostHandler.OnHandshaking(ISession session)
+        void IActorTlsHostHandler.OnHandshaking(ISession session)
         {
         }
 
-        public IActorRef GetActorRef(int sessionId)
+        public bool TryGetActorRef(int sessionId, out IActorRef actorRef)
         {
-            if(_sessionActors.TryGetValue(sessionId, out var actorRef))
-            {
-                return actorRef;
-            }
-
-            return null;
+            return _sessionActors.TryGetValue(sessionId, out actorRef);
         }
     }
 }

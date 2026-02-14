@@ -5,13 +5,12 @@
 using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Core.ObjectPools;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Dignus.Actor.Core.Internals
 {
     internal class ActorYieldTask : IActorSchedulable
     {
-        private SendOrPostCallback _callback;
+        private SendOrPostCallback _sendOrPostCallback;
         private object _state;
         private readonly ActorYieldTaskPool _pool;
 
@@ -21,26 +20,21 @@ namespace Dignus.Actor.Core.Internals
         }
         public void Set(SendOrPostCallback callback, object state)
         {
-            _callback = callback;
+            _sendOrPostCallback = callback;
             _state = state;
         }
 
-        public void Clear()
+        public void Recycle()
         {
-            _callback = null;
+            _sendOrPostCallback = null;
             _state = null;
+
+            _pool.Push(this);
         }
-        public Task ExecuteAsync()
+        public void Execute()
         {
-            try
-            {
-                _callback?.Invoke(_state);
-            }
-            finally
-            {
-                _pool.Push(this);
-            }
-            return Task.CompletedTask;
+            _sendOrPostCallback?.Invoke(_state);
+            Recycle();
         }
     }
 }

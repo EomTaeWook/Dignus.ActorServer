@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 // Part of Dignus.ActorServer
 
+using Dignus.Actor.Core;
 using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Network.Messages;
 
@@ -12,9 +13,15 @@ namespace Dignus.Actor.Network.Actors
     {
         protected IActorRef TransportRef => transportRef;
 
-        protected void Post(byte[] bytes) 
+        public void Post(byte[] bytes)
         {
-            transportRef.Post(new RawMessage(bytes));
+            Post(transportRef, new BinaryMessage(bytes));
+        }
+
+        internal override void Cleanup()
+        {
+            transportRef.Kill();
+            base.Cleanup();
         }
     }
 }

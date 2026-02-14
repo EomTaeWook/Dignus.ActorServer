@@ -35,7 +35,6 @@ namespace Dignus.Actor.Core.ObjectPools
 
         public void Push(ActorYieldTask item)
         {
-            item.Clear();
             _pool.Push(item);
         }
     }
