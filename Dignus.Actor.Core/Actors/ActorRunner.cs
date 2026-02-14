@@ -3,61 +3,49 @@ using Dignus.Actor.Core.Messages;
 using Dignus.Collections;
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Dignus.Actor.Core.Actors
 {
-    internal sealed class ActorRunner : IActorSchedulable
+    internal sealed class ActorRunner(ActorBase actor, ActorDispatcher dispatcher, Action<int> onFinalize) : IActorSchedulable
     {
-        private readonly ActorBase _actor;
-        private readonly ActorDispatcher _dispatcher;
-        private readonly Action<int> _onFinalize;
+        private readonly ActorBase _actor = actor;
+        private readonly ActorDispatcher _dispatcher = dispatcher;
+        private readonly Action<int> _onFinalize = onFinalize;
         private readonly SynchronizedArrayQueue<ActorMail> _mailbox = [];
 
-        private int _actorState;
-
-        public ActorRunner(ActorBase actor, ActorDispatcher dispatcher, Action<int> onFinalize)
-        {
-            _actor = actor;
-            _dispatcher = dispatcher;
-            _onFinalize = onFinalize;
-        }
+        private int _hasMail;
+        private int _lifecycleState = 0;
 
         public IActorRef GetActorRef()
         {
             return _actor.Self;
         }
-
         public void Enqueue(IActorMessage message, IActorRef sender)
         {
-            if (GetState() >= ActorState.Stopping)
+            if (Volatile.Read(ref _lifecycleState) != 0)
             {
                 return;
             }
 
-            ActorMail actorMail = new()
-            {
-                Message = message,
-                Sender = sender
-            };
+            ActorMail actorMail = new(message, sender);
 
             _mailbox.Add(actorMail);
-            if(_actorState == 1)
+
+            if (Interlocked.Exchange(ref _hasMail, 1) == 0)
             {
-                return;
+                _dispatcher.Schedule(this);
             }
-            TrySchedule();
         }
 
         public void Kill()
         {
-            if (GetState() >= ActorState.Stopping)
+            if(Interlocked.CompareExchange(ref _lifecycleState, 1, 0) == 0)
             {
-                return;
-            }
-            if (TryTransition(ActorState.Idle, ActorState.Stopping) 
-                || TryTransition(ActorState.Idle, ActorState.Stopping))
-            {
-                TrySchedule();
+                if (Interlocked.Exchange(ref _hasMail, 1) == 0)
+                {
+                    _dispatcher.Schedule(this);
+                }
             }
         }
 
@@ -65,80 +53,45 @@ namespace Dignus.Actor.Core.Actors
         {
             while (_mailbox.TryRead(out ActorMail actorMail))
             {
-                if (GetState() == ActorState.Stopping)
+                if (_lifecycleState > 0)
                 {
                     break;
                 }
 
-                var receiveTask = _actor.OnReceiveInternal(actorMail.Message, actorMail.Sender);
+                var valueTask = _actor.OnReceiveInternal(actorMail.Message,
+                    actorMail.Sender);
 
-                if (receiveTask.IsCompleted)
+                if (!valueTask.IsCompleted)
                 {
-                    if (receiveTask.IsFaulted)
-                    {
-                        throw receiveTask.AsTask().Exception;
-                    }
-
-                    continue;
+                    break;
                 }
-
-                receiveTask.ConfigureAwait(false);
-
-                return;
             }
 
-            if (GetState() == ActorState.Stopping)
+            if (Volatile.Read(ref _lifecycleState) == 1)
             {
                 FinalizeKill();
                 return;
             }
 
-            if (_mailbox.Count > 0)
-            {
-                _dispatcher.Schedule(this);
-                return;
-            }
+            Volatile.Write(ref _hasMail, 0);
 
-            TryTransition(ActorState.Pending, ActorState.Idle);
-        }
-        private void TrySchedule()
-        {
-            if(TryTransition(ActorState.Idle, ActorState.Pending))
+            var mail = _mailbox.Peek();
+            if (mail.Message != null)
             {
-                _dispatcher.Schedule(this);
+                if (Interlocked.Exchange(ref _hasMail, 1) == 0)
+                {
+                    _dispatcher.Schedule(this);
+                }
             }
-            else
-            {
-                Console.WriteLine("faield to Schedule");
-            }
-        }
-
-        private ActorState GetState()
-        {
-            return (ActorState)Volatile.Read(ref _actorState);
-        }
-
-        private bool TryTransition(ActorState expected, ActorState desired)
-        {
-            return Interlocked.CompareExchange(
-                       ref _actorState,
-                       (int)desired,
-                       (int)expected) == (int)expected;
         }
 
         private void FinalizeKill()
         {
             VerifyContext();
 
-            if (!TryTransition(ActorState.Stopping, ActorState.Stopped))
-            {
-                return;
-            }
+            Interlocked.Exchange(ref _lifecycleState, 2);
 
-            while (_mailbox.TryRead(out ActorMail _))
-            {
-                //actorMail.Recycle();
-            }
+            _mailbox.Clear();
             _actor.Cleanup();
             _onFinalize(_actor.SelfRef.Id);
         }

@@ -10,20 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dignus.Sockets" Version="1.2.0" />
+    <PackageReference Include="Dignus.Sockets" Version="1.2.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Dignus.Actor.Core\Dignus.Actor.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Dignus">
-      <HintPath>..\..\Dignus\publish\dll\net8.0\Dignus.dll</HintPath>
-    </Reference>
-    <Reference Include="Dignus.Sockets">
-      <HintPath>..\..\Dignus\publish\dll\net8.0\Dignus.Sockets.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

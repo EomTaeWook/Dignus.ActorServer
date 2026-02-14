@@ -22,9 +22,9 @@ namespace Dignus.Actor.Network.Actors
                 return ValueTask.CompletedTask;
             }
 
-            if (message is BinaryMessage rawMessage)
+            if (message is BinaryMessage binaryMessage)
             {
-                session.SendAsync(rawMessage.Data);
+                session.Send(binaryMessage.Data);
             }
             return ValueTask.CompletedTask;
         }

@@ -17,21 +17,18 @@ namespace Dignus.Actor.Core.Dispatcher
         public static ActorDispatcher CurrentActorDispatcher;
 
         public int Id => _dispatcherId;
-        public ActorMailPool MailPool => _actorMailPool;
 
         private readonly int _dispatcherId;
 
         private readonly SynchronizedArrayQueue<IActorSchedulable> _scheduledActors = new();
 
-        private readonly ActorMailPool _actorMailPool = new();
         private readonly ActorYieldTaskPool _yieldTaskPool = new();
         private volatile bool _isStopped;
         private readonly DispatcherSynchronizationContext _synchronizationContext;
+        private readonly Thread _workerThread;
 
-        private int _isProcessing = 0;
-
-        private Thread _workerThread;
-        private ManualResetEventSlim _signal = new ManualResetEventSlim(false);
+        private readonly SemaphoreSlim _signal = new(0, int.MaxValue);
+        private int _signalPending = 0;
 
         public ActorDispatcher(int dispatcherId)
         {
@@ -49,7 +46,6 @@ namespace Dignus.Actor.Core.Dispatcher
         public void Start()
         {
             _workerThread.Start();
-            _isProcessing = 1;
         }
 
         private void ProcessScheduledActors()
@@ -57,57 +53,55 @@ namespace Dignus.Actor.Core.Dispatcher
             CurrentActorDispatcher = this;
             SynchronizationContext.SetSynchronizationContext(_synchronizationContext);
 
-            while (!_isStopped)
+            while (true)
             {
+                _signal.Wait();
+
+                if (_isStopped) 
+                {
+                    break;
+                }
+
+                Interlocked.Exchange(ref _signalPending, 0);
+
                 while (_scheduledActors.TryRead(out IActorSchedulable actorSchedulable))
                 {
-                    Console.WriteLine($"Processing scheduledActors : {actorSchedulable}");
                     actorSchedulable.Execute();
 
                     if (_isStopped)
                     {
-                        return;
+                        break;
                     }
                 }
 
-                if (_scheduledActors.Count > 0)
+                if (_isStopped)
                 {
-                    Console.WriteLine($"scheduledActors count : {_scheduledActors.Count}");
-                    continue;
-                }
-                _signal.Reset();
-                Console.WriteLine($"scheduledActors count : {_scheduledActors.Count}");
-                if (_scheduledActors.Count == 0)
-                {
-                    if (Interlocked.CompareExchange(ref _isProcessing, 0, 1) == 1)
-                    {
-                        _signal.Wait();
-                    }
-                    else
-                    {
-                        Console.WriteLine("!!!");
-                    }
+                    break;
                 }
             }
+
+            CurrentActorDispatcher = null;
+            SynchronizationContext.SetSynchronizationContext(null);
         }
 
         public void Dispose()
         {
             _isStopped = true;
+            _signal.Release();
+
+            if (Thread.CurrentThread != _workerThread)
+            {
+                _workerThread.Join();
+            }
+            _signal.Dispose();
         }
 
         internal void Schedule(IActorSchedulable actorSchedulable)
         {
             _scheduledActors.Add(actorSchedulable);
-
-            if(_isProcessing == 1)
+            if (Interlocked.CompareExchange(ref _signalPending, 1, 0) == 0)
             {
-                return;
-            }
-
-            if (Interlocked.CompareExchange(ref _isProcessing, 1, 0) == 0)
-            {
-                _signal.Set();
+                _signal.Release();
             }
         }
 

@@ -27,7 +27,6 @@ namespace Dignus.Actor.Core.Actors
         public void Post(IActorMessage message, IActorRef sender)
         {
             ArgumentNullException.ThrowIfNull(message);
-
             _actorRunner.Enqueue(message, sender);
         }
 
