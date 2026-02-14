@@ -2,6 +2,7 @@
 using Dignus.Actor.Network.Messages;
 using Dignus.Actor.Network.Serialization;
 using Dignus.Sockets.Interfaces;
+using System.Buffers;
 
 namespace ConsoleApp.Messages
 {

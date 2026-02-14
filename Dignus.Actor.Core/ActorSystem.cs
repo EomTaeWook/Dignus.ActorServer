@@ -16,10 +16,10 @@ namespace Dignus.Actor.Core
         private readonly ConcurrentDictionary<int, ActorRunner> _actors = new();
         private readonly ActorDispatcher[] _dispatchers;
         private int _nextId;
-        public ActorSystem(int shardCount)
+        public ActorSystem(int dispatcherThreadCount)
         {
-            _dispatchers = new ActorDispatcher[shardCount];
-            for (int i = 0; i < shardCount; i++)
+            _dispatchers = new ActorDispatcher[dispatcherThreadCount];
+            for (int i = 0; i < dispatcherThreadCount; i++)
             {
                 _dispatchers[i] = new ActorDispatcher(i);
                 _dispatchers[i].Start();
@@ -37,15 +37,14 @@ namespace Dignus.Actor.Core
         private ActorRef SpawnInternal<TActor>(TActor actor) where TActor : ActorBase
         {
             int id = Interlocked.Increment(ref _nextId);
-
             int dispatcherIndex = id % _dispatchers.Length;
             var dispatcher = _dispatchers[dispatcherIndex];
 
-            ActorRef actorRef = new(this, id);
+            var runner = new ActorRunner(actor, dispatcher, FinalizeKill);
+
+            ActorRef actorRef = new(runner, id);
 
             actor.Bind(dispatcher, actorRef);
-
-            var runner = new ActorRunner(actor, dispatcher, FinalizeKill);
 
             if (_actors.TryAdd(id, runner) == false)
             {
@@ -57,12 +56,12 @@ namespace Dignus.Actor.Core
 
         internal void Post(int actorId, IActorMessage message, IActorRef sender)
         {
-            if (_actors.TryGetValue(actorId, out var actor) == false)
+            if (_actors.TryGetValue(actorId, out var actorRunner) == false)
             {
                 return;
             }
 
-            actor.Enqueue(message, sender);
+            actorRunner.Enqueue(message, sender);
         }
         internal void Kill(int actorId)
         {

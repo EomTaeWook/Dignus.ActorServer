@@ -19,7 +19,10 @@ namespace Dignus.Actor.Core.Messages
         {
             _pool = pool;
         }
+        public ActorMail()
+        {
 
+        }
         public void Recycle()
         {
             if(_pool == null)

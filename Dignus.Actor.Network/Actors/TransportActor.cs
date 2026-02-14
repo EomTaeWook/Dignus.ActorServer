@@ -13,20 +13,20 @@ namespace Dignus.Actor.Network.Actors
     public sealed class TransportActor(ISession session) : ActorBase
     {
         private ISession _session = session;
-        protected override Task OnReceive(IActorMessage message, IActorRef sender)
+        protected override ValueTask OnReceive(IActorMessage message, IActorRef sender)
         {
             var session = _session;
 
             if (session == null)
             {
-                return Task.CompletedTask;
+                return ValueTask.CompletedTask;
             }
 
             if (message is BinaryMessage rawMessage)
             {
                 session.SendAsync(rawMessage.Data);
             }
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
         }
         internal override void Cleanup()
         {

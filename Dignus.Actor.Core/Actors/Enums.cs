@@ -2,8 +2,9 @@
 {
     public enum ActorState
     {
-        Active = 0,
-        Stopping = 1,
-        Stopped = 2
+        Idle,
+        Pending,
+        Stopping,
+        Stopped
     }
 }

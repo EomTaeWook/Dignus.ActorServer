@@ -2,6 +2,7 @@
 using Dignus.Actor.Core.Messages;
 using Dignus.Actor.Network.Actors;
 using Dignus.Actor.Network.Messages;
+using Dignus.Log;
 
 namespace ConsoleApp.Networks
 {
@@ -9,13 +10,14 @@ namespace ConsoleApp.Networks
     {
         private readonly IActorRef _transportRef = transportRef;
 
-        protected override Task OnReceive(IActorMessage message, IActorRef sender)
+        protected override ValueTask OnReceive(IActorMessage message, IActorRef sender)
         {
             if(message is BinaryMessage rawMessage)
             {
+                //LogHelper.Info($"{rawMessage.Data.Count()}");
                 _transportRef.Post(rawMessage);
             }
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
         }
         public override void OnKill() 
         {

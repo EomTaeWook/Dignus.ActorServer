@@ -14,11 +14,11 @@ namespace Dignus.Actor.Core.Actors
 
         internal ActorRef SelfRef { get; private set; }
 
-        protected abstract Task OnReceive(IActorMessage message, IActorRef sender);
+        protected abstract ValueTask OnReceive(IActorMessage message, IActorRef sender);
 
         internal ActorDispatcher Dispatcher { get; private set; }
 
-        internal Task OnReceiveInternal(IActorMessage message, IActorRef sender)
+        internal ValueTask OnReceiveInternal(IActorMessage message, IActorRef sender)
         {
             return OnReceive(message, sender);
         }

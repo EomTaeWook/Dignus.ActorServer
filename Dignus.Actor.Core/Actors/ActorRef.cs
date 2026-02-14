@@ -14,7 +14,7 @@ namespace Dignus.Actor.Core.Actors
         void Kill();
     }
 
-    internal class ActorRef(ActorSystem actorSystem, int id) : IActorRef
+    internal class ActorRef(ActorRunner actorRunner, int id) : IActorRef
     {
         public override string ToString()
         {
@@ -22,34 +22,28 @@ namespace Dignus.Actor.Core.Actors
         }
         public int Id => id;
 
-        private ActorSystem _actorSystem = actorSystem;
+        private ActorRunner _actorRunner = actorRunner;
 
         public void Post(IActorMessage message, IActorRef sender)
         {
             ArgumentNullException.ThrowIfNull(message);
 
-            var actorSystem = _actorSystem;
-
-            if(actorSystem == null)
-            {
-                return;
-            }
-            actorSystem.Post(id, message, sender);
+            _actorRunner.Enqueue(message, sender);
         }
 
         public void Kill()
         {
-            var actorSystem = _actorSystem;
-            if (actorSystem == null)
+            var actorRunner = _actorRunner;
+            if (actorRunner == null)
             {
                 return;
             }
-            actorSystem.Kill(id);
+            actorRunner.Kill();
         }
         
         public void Invalidate()
         {
-            _actorSystem = null;
+            _actorRunner = null;
         }
     }
 }
