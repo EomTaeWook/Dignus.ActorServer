@@ -17,4 +17,8 @@
     <ProjectReference Include="..\Dignus.Actor.Core\Dignus.Actor.Core.csproj" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
 </Project>

@@ -52,6 +52,9 @@
   <ItemGroup>
     <TfmSpecificPackageFile Include="..\Dignus.Actor.Core\bin\$(Configuration)\$(TargetFramework)\Dignus.Actor.Core.dll" PackagePath="lib\$(TargetFramework)\" />
     <TfmSpecificPackageFile Include="..\Dignus.Actor.Network\bin\$(Configuration)\$(TargetFramework)\Dignus.Actor.Network.dll" PackagePath="lib\$(TargetFramework)\" />
+
+    <TfmSpecificPackageFile Include="..\Dignus.Actor.Core\bin\$(Configuration)\$(TargetFramework)\Dignus.dll" PackagePath="lib\$(TargetFramework)\" />
+    <TfmSpecificPackageFile Include="..\Dignus.Actor.Network\bin\$(Configuration)\$(TargetFramework)\Dignus.Sockets.dll" PackagePath="lib\$(TargetFramework)\" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Release'">
