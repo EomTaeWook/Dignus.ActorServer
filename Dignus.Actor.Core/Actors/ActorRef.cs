@@ -10,6 +10,7 @@ namespace Dignus.Actor.Core.Actors
     public interface IActorRef
     {
         void Post(IActorMessage message, IActorRef sender = null);
+        void Post(in ActorMail actorMail);
 
         void Kill();
     }
@@ -28,6 +29,10 @@ namespace Dignus.Actor.Core.Actors
         {
             ArgumentNullException.ThrowIfNull(message);
             _actorRunner.Enqueue(message, sender);
+        }
+        public void Post(in ActorMail actorMail)
+        {
+            _actorRunner.Enqueue(actorMail);
         }
 
         public void Kill()

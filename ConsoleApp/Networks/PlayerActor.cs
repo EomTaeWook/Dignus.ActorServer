@@ -12,13 +12,9 @@ namespace ConsoleApp.Networks
 
         protected override async ValueTask OnReceive(IActorMessage message, IActorRef sender)
         {
-            await Task.Delay(1000);
-
-            await ActorAwait.Join(this);
-
             if(message is BinaryMessage rawMessage)
             {
-                //_transportRef.Post(rawMessage);
+                _transportRef.Post(rawMessage);
             }
         }
         public override void OnKill() 

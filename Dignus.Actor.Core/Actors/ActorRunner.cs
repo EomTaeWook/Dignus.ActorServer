@@ -9,6 +9,26 @@ namespace Dignus.Actor.Core.Actors
 {
     internal sealed class ActorRunner(ActorBase actor, ActorDispatcher dispatcher, Action<int> onFinalize) : IActorSchedulable
     {
+        internal static void EnqueueContinuation(object state)
+        {
+            var runner = (ActorRunner)state;
+            try
+            {
+                var task = Volatile.Read(ref runner._pendingTask);
+                task.GetAwaiter().GetResult();
+            }
+            catch (Exception)
+            {
+                runner.Kill();
+            }
+            finally
+            {
+                Volatile.Write(ref runner._pendingTask, null);
+                runner._dispatcher.Schedule(runner);
+            }
+        }
+
+
         private readonly ActorBase _actor = actor;
         private readonly ActorDispatcher _dispatcher = dispatcher;
         private readonly Action<int> _onFinalize = onFinalize;
@@ -16,6 +36,7 @@ namespace Dignus.Actor.Core.Actors
 
         private int _hasMail;
         private int _lifecycleState = 0;
+        private Task _pendingTask;
 
         public IActorRef GetActorRef()
         {
@@ -23,12 +44,15 @@ namespace Dignus.Actor.Core.Actors
         }
         public void Enqueue(IActorMessage message, IActorRef sender)
         {
+            ActorMail actorMail = new(message, sender);
+            Enqueue(actorMail);
+        }
+        public void Enqueue(in ActorMail actorMail)
+        {
             if (Volatile.Read(ref _lifecycleState) != 0)
             {
                 return;
             }
-
-            ActorMail actorMail = new(message, sender);
 
             _mailbox.Add(actorMail);
 
@@ -51,6 +75,11 @@ namespace Dignus.Actor.Core.Actors
 
         public void Execute()
         {
+            if (Volatile.Read(ref _pendingTask) != null)
+            {
+                return;
+            }
+
             while (_mailbox.TryRead(out ActorMail actorMail))
             {
                 if (_lifecycleState > 0)
@@ -61,10 +90,20 @@ namespace Dignus.Actor.Core.Actors
                 var valueTask = _actor.OnReceiveInternal(actorMail.Message,
                     actorMail.Sender);
 
-                if (!valueTask.IsCompleted)
+                if (valueTask.IsCompleted)
                 {
-                    break;
+                    continue;
                 }
+
+                _pendingTask = valueTask.AsTask();
+
+                _pendingTask.ContinueWith((task, state) => 
+                {
+                    var runner = (ActorRunner)state;
+                    runner._dispatcher.EnqueueContinuation(EnqueueContinuation, state);
+                },
+                this);
+                return;
             }
 
             if (Volatile.Read(ref _lifecycleState) == 1)
@@ -76,6 +115,7 @@ namespace Dignus.Actor.Core.Actors
             Volatile.Write(ref _hasMail, 0);
 
             var mail = _mailbox.Peek();
+
             if (mail.Message != null)
             {
                 if (Interlocked.Exchange(ref _hasMail, 1) == 0)

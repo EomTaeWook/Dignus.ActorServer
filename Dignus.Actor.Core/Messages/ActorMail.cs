@@ -6,7 +6,7 @@ using Dignus.Actor.Core.Actors;
 
 namespace Dignus.Actor.Core.Messages
 {
-    internal readonly struct ActorMail(IActorMessage Message, IActorRef Sender)
+    public readonly struct ActorMail(IActorMessage Message, IActorRef Sender)
     {
         public readonly IActorMessage Message = Message;
         public readonly IActorRef Sender = Sender;
