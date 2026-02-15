@@ -7,15 +7,15 @@ using Dignus.Log;
 
 namespace ConsoleApp
 {
-    internal class EchoServer : TcpServerBase<PlayerActor>
+    internal class TcpServer : TcpServerBase<EchoActor>
     {
-        public EchoServer() : base(new MessageSerializer(), new MyPacketFramer())
+        public TcpServer() : base(new MessageSerializer(), new MyPacketFramer())
         {
             
         }
-        protected override PlayerActor CreateSessionActor(IActorRef transportActorRef)
+        protected override EchoActor CreateSessionActor(IActorRef transportActorRef)
         {
-            return new PlayerActor(transportActorRef);
+            return new EchoActor(transportActorRef);
         }
 
         protected override void OnAccepted(IActorRef connectedActorRef)

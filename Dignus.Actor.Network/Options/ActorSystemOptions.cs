@@ -8,6 +8,6 @@ namespace Dignus.Actor.Network.Options
 {
     public sealed class ActorSystemOptions
     {
-        public int DispatcherThreadCount { get; set; } = 1; /*Environment.ProcessorCount;*/
+        public int DispatcherThreadCount { get; set; } = Environment.ProcessorCount;
     }
 }

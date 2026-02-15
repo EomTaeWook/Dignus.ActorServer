@@ -6,7 +6,7 @@ using Dignus.Actor.Network.Messages;
 
 namespace ConsoleApp.Networks
 {
-    internal class PlayerActor(IActorRef transportRef) : SessionActor(transportRef)
+    internal class EchoActor(IActorRef transportRef) : SessionActor(transportRef)
     {
         private readonly IActorRef _transportRef = transportRef;
 

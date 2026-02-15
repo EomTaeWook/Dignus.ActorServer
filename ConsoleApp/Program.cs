@@ -7,11 +7,10 @@ LogBuilder.Build();
 
 AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-EchoServer echoServer = new EchoServer();
+TcpServer echoServer = new();
 echoServer.Start(5000);
 
 LogHelper.Info("actor server start");
-
 
 Console.Read();
 
