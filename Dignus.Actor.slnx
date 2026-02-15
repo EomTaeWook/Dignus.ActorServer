@@ -1,10 +1,11 @@
 <Solution>
   <Folder Name="/Benchmark/">
-    <Project Path="ConsoleApp/TcpActorServer.csproj" />
+    <Project Path="Benchmark/TcpActorServer/TcpActorServer.csproj" />
+    <Project Path="Benchmark/TlsActorServer/TlsActorServer.csproj" />
   </Folder>
   <Folder Name="/Publish/">
-    <Project Path="Dignus.ActorServer/Dignus.ActorServer.csproj" Id="d8d5d280-8f15-499a-bf9c-7e8981dcc5a7" />
+    <Project Path="Dignus.ActorServer/Dignus.ActorServer.csproj" />
   </Folder>
-  <Project Path="Dignus.Actor.Core/Dignus.Actor.Core.csproj" Id="767ccd48-6841-4617-a98c-688d49b4cb5c" />
-  <Project Path="Dignus.Actor.Network/Dignus.Actor.Network.csproj" Id="2cc0c5ca-97f2-4887-a5d9-92601d0562ab" />
+  <Project Path="Dignus.Actor.Core/Dignus.Actor.Core.csproj" />
+  <Project Path="Dignus.Actor.Network/Dignus.Actor.Network.csproj" />
 </Solution>

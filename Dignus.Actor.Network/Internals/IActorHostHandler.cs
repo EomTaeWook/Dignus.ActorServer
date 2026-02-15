@@ -3,6 +3,7 @@
 // Part of Dignus.ActorServer
 
 using Dignus.Sockets.Interfaces;
+using System;
 
 namespace Dignus.Actor.Network.Internals
 {
@@ -15,5 +16,8 @@ namespace Dignus.Actor.Network.Internals
     internal interface IActorTlsHostHandler : IActorHostHandler
     {
         void OnHandshaking(ISession session);
+
+        void OnHandshakeFailed(ISession session, Exception ex);
+
     }
 }

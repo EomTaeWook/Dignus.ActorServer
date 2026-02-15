@@ -6,6 +6,7 @@ using Dignus.Actor.Network.Internals;
 using Dignus.Sockets;
 using Dignus.Sockets.Interfaces;
 using Dignus.Sockets.Tls;
+using System;
 
 namespace Dignus.Actor.Network.Hosts
 {
@@ -29,6 +30,10 @@ namespace Dignus.Actor.Network.Hosts
         protected override void OnHandshaking(ISession session)
         {
             handler.OnHandshaking(session);
+        }
+        protected override void OnHandshakeFailed(ISession session, Exception exception)
+        {
+            handler.OnHandshakeFailed(session, exception);
         }
     }
 }

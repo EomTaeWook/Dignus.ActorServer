@@ -10,10 +10,10 @@ High-performance Actor-based network server framework.
 
 This benchmark measures full round-trip throughput:
 
-Client send → Server-side processing → Response return
+Client send -> Server-side processing -> Response return
 
 <p align="center">
-  <img src="Benchmark/Result/tcp-round-trip.png" width="700" />
+  <img src="Benchmark/Result/tcp-round-trip.png" width="600" />
 </p>
 
 ### Test Conditions
@@ -38,14 +38,37 @@ Data Throughput: 311.53 MiB/s
 Message Throughput: 10,208,278 msg/s
 ```
 
+---
+
+### TLS Round-Trip Benchmark
+
+<p align="center">
+  <img src="Benchmark/Result/tls-round-trip.png" width="600" />
+</p>
+
+Result:
+
+```
+Total Time: 10.002 seconds
+Total Client: 1
+Total Bytes: 2,482,299,424
+Total Data: 2.31 GiB
+Total Message: 77,571,857
+Data Throughput: 236.68 MiB/s
+Message Throughput: 7,755,636 msg/s
+```
+
+---
 
 ### Performance Highlights
 
-- Over **10 million round-trip messages per second**
-- Sustained throughput above **300 MiB/sec**
-- Full end-to-end measurement (decode → actor execution → encode → send)
+- Over 10 million round-trip messages per second
+- Sustained throughput above 300 MiB/sec
+- Full end-to-end measurement (decode -> actor execution -> encode -> send)
 - Execution confined to dedicated dispatcher threads
 - No ThreadPool scheduling for actor logic
+
+---
 
 ## Design Goals
 
@@ -69,7 +92,7 @@ Message Throughput: 10,208,278 msg/s
 
 Actors are distributed using:
 
-```text
+```
 dispatcherIndex = actorId % dispatcherCount
 ```
 
@@ -83,7 +106,7 @@ Each dispatcher:
 
 - Owns a dedicated worker thread
 - Maintains a lock-free scheduling queue
-- Uses `SemaphoreSlim` for wake-up signaling
+- Uses SemaphoreSlim for wake-up signaling
 - Enforces dispatcher-thread execution context
 
 Guarantees:
@@ -108,8 +131,8 @@ Responsibilities:
 Execution model:
 
 1. Dequeue message
-2. Execute `OnReceive`
-3. If async incomplete → schedule continuation
+2. Execute OnReceive
+3. If async incomplete -> schedule continuation
 4. Resume on dispatcher thread
 
 This guarantees logical single-threaded execution per actor.
@@ -120,11 +143,14 @@ This guarantees logical single-threaded execution per actor.
 
 ```
 TcpServerBase / TlsServerBase
-        ↓
+    |
+    v
 ActorPacketProcessor
-        ↓
+    |
+    v
 SessionActor
-        ↓
+    |
+    v
 TransportActor
 ```
 
@@ -144,7 +170,7 @@ TransportActor
 
 Kill flow:
 
-1. `sessionRef.Kill()`
+1. sessionRef.Kill()
 2. ActorRunner transitions to killing state
 3. Finalization executed on dispatcher thread
 4. Mailbox cleared

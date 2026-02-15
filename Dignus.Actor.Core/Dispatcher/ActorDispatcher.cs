@@ -20,7 +20,7 @@ namespace Dignus.Actor.Core.Dispatcher
 
         private readonly int _dispatcherId;
 
-        private readonly SynchronizedArrayQueue<IActorSchedulable> _scheduledActors = new();
+        private readonly SynchronizedArrayQueue<IActorSchedulable> _scheduledActors = [];
 
         private readonly ActorYieldTaskPool _yieldTaskPool = new();
         private volatile bool _isStopped;

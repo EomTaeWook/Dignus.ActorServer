@@ -26,6 +26,8 @@ namespace Dignus.Actor.Network
         protected abstract void OnAccepted(IActorRef connectedActorRef);
         protected abstract void OnDisconnected(IActorRef connectedActorRef);
 
+        protected abstract void OnHandshakeFailed(ISession session, Exception ex);
+
         private readonly ActorSystem _actorSystem;
 
         private readonly ActorTlsHost _actorTlsHost;
@@ -119,6 +121,11 @@ namespace Dignus.Actor.Network
         public bool TryGetActorRef(int sessionId, out IActorRef actorRef)
         {
             return _sessionActors.TryGetValue(sessionId, out actorRef);
+        }
+
+        void IActorTlsHostHandler.OnHandshakeFailed(ISession session, Exception ex)
+        {
+            OnHandshakeFailed(session, ex);
         }
     }
 }
