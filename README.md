@@ -1,5 +1,7 @@
 # Dignus.ActorServer
 
+[![NuGet](https://img.shields.io/nuget/v/Dignus.ActorServer.svg)](https://www.nuget.org/packages/Dignus.ActorServer/)
+
 High-performance Actor-based network server framework.
 
 ---
