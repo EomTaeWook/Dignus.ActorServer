@@ -1,4 +1,5 @@
 ﻿using Dignus.Actor.Core.Actors;
+using Dignus.Actor.Core.Messages;
 using Dignus.Actor.Network;
 using Dignus.Log;
 using Dignus.Sockets.Interfaces;
@@ -19,6 +20,11 @@ namespace TlsActorServer
         protected override void OnAccepted(IActorRef connectedActorRef)
         {
             LogHelper.Info($"OnAccepted : {connectedActorRef}");
+        }
+
+        protected override void OnDeadLetterMessage(DeadLetterMessage deadLetterMessage)
+        {
+            LogHelper.Info($"OnDeadLetterMessage : {deadLetterMessage}");
         }
 
         protected override void OnDisconnected(IActorRef connectedActorRef)

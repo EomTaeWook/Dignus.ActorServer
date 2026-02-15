@@ -10,9 +10,9 @@ namespace Dignus.Actor.Core.Actors
 {
     public abstract class ActorBase 
     {
-        public IActorRef Self => SelfRef;
+        public IActorRef Self => SelfActorRef;
 
-        internal ActorRef SelfRef { get; private set; }
+        internal ActorRef SelfActorRef { get; private set; }
 
         protected abstract ValueTask OnReceive(IActorMessage message, IActorRef sender);
 
@@ -24,12 +24,11 @@ namespace Dignus.Actor.Core.Actors
         }
         internal virtual void Cleanup()
         {
-            SelfRef.Invalidate();
         }
         internal void Bind(ActorDispatcher actorDispatcher, ActorRef actorRef)
         {
             Dispatcher = actorDispatcher;
-            SelfRef = actorRef;
+            SelfActorRef = actorRef;
         }
 
         public void Post(IActorRef targetRef, IActorMessage message)

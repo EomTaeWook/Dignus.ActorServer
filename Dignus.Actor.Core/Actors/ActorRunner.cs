@@ -1,4 +1,5 @@
 ﻿using Dignus.Actor.Core.Dispatcher;
+using Dignus.Actor.Core.Internals;
 using Dignus.Actor.Core.Messages;
 using Dignus.Collections;
 using System;
@@ -7,14 +8,18 @@ using System.Threading.Tasks;
 
 namespace Dignus.Actor.Core.Actors
 {
-    internal sealed class ActorRunner(ActorBase actor, ActorDispatcher dispatcher, Action<int> onFinalize) : IActorSchedulable
+    internal sealed class ActorRunner(ActorBase actor,
+        ActorDispatcher dispatcher,
+        int mailboxCapacity,
+        Action<int> onFinalize
+        ) : IActorSchedulable
     {
         internal static void EnqueueContinuation(object state)
         {
             var runner = (ActorRunner)state;
             try
             {
-                var task = Volatile.Read(ref runner._pendingTask);
+                var task = Volatile.Read(ref runner._pendingReceiveTask);
                 task.GetAwaiter().GetResult();
             }
             catch (Exception)
@@ -23,50 +28,53 @@ namespace Dignus.Actor.Core.Actors
             }
             finally
             {
-                Volatile.Write(ref runner._pendingTask, null);
+                Volatile.Write(ref runner._pendingReceiveTask, null);
                 runner._dispatcher.Schedule(runner);
             }
         }
-
-
         private readonly ActorBase _actor = actor;
         private readonly ActorDispatcher _dispatcher = dispatcher;
         private readonly Action<int> _onFinalize = onFinalize;
-        private readonly SynchronizedArrayQueue<ActorMail> _mailbox = [];
+        private readonly MpscBoundedQueue<ActorMail> _mailbox = new(mailboxCapacity);
 
-        private int _hasMail;
+        private int _isScheduled;
         private int _lifecycleState = 0;
-        private Task _pendingTask;
+        private Task _pendingReceiveTask;
 
-        public IActorRef GetActorRef()
+        public ActorBase GetActor()
         {
-            return _actor.Self;
+            return _actor;
         }
-        public void Enqueue(IActorMessage message, IActorRef sender)
+        public EnqueueResult Enqueue(IActorMessage message, IActorRef sender)
         {
             ActorMail actorMail = new(message, sender);
-            Enqueue(actorMail);
+            return Enqueue(actorMail);
         }
-        public void Enqueue(in ActorMail actorMail)
+        public EnqueueResult Enqueue(in ActorMail actorMail)
         {
             if (Volatile.Read(ref _lifecycleState) != 0)
             {
-                return;
+                return EnqueueResult.ActorStopped;
             }
 
-            _mailbox.Add(actorMail);
+            if(_mailbox.TryEnqueue(actorMail) == false)
+            {
+                return EnqueueResult.MailboxFull;
+            }
 
-            if (Interlocked.Exchange(ref _hasMail, 1) == 0)
+            if (Interlocked.Exchange(ref _isScheduled, 1) == 0)
             {
                 _dispatcher.Schedule(this);
             }
+
+            return EnqueueResult.Success;
         }
 
         public void Kill()
         {
             if(Interlocked.CompareExchange(ref _lifecycleState, 1, 0) == 0)
             {
-                if (Interlocked.Exchange(ref _hasMail, 1) == 0)
+                if (Interlocked.Exchange(ref _isScheduled, 1) == 0)
                 {
                     _dispatcher.Schedule(this);
                 }
@@ -75,12 +83,12 @@ namespace Dignus.Actor.Core.Actors
 
         public void Execute()
         {
-            if (Volatile.Read(ref _pendingTask) != null)
+            if (Volatile.Read(ref _pendingReceiveTask) != null)
             {
                 return;
             }
 
-            while (_mailbox.TryRead(out ActorMail actorMail))
+            while (_mailbox.TryDequeue(out ActorMail actorMail))
             {
                 if (_lifecycleState > 0)
                 {
@@ -95,9 +103,9 @@ namespace Dignus.Actor.Core.Actors
                     continue;
                 }
 
-                _pendingTask = valueTask.AsTask();
+                _pendingReceiveTask = valueTask.AsTask();
 
-                _pendingTask.ContinueWith((task, state) => 
+                _pendingReceiveTask.ContinueWith((task, state) => 
                 {
                     var runner = (ActorRunner)state;
                     runner._dispatcher.EnqueueContinuation(EnqueueContinuation, state);
@@ -112,13 +120,11 @@ namespace Dignus.Actor.Core.Actors
                 return;
             }
 
-            Volatile.Write(ref _hasMail, 0);
+            Volatile.Write(ref _isScheduled, 0);
 
-            var mail = _mailbox.Peek();
-
-            if (mail.Message != null)
+            if (_mailbox.TryPeek(out _))
             {
-                if (Interlocked.Exchange(ref _hasMail, 1) == 0)
+                if (Interlocked.Exchange(ref _isScheduled, 1) == 0)
                 {
                     _dispatcher.Schedule(this);
                 }
@@ -131,9 +137,13 @@ namespace Dignus.Actor.Core.Actors
 
             Interlocked.Exchange(ref _lifecycleState, 2);
 
-            _mailbox.Clear();
+            while(_mailbox.TryDequeue(out _))
+            {
+            }
+
             _actor.Cleanup();
-            _onFinalize(_actor.SelfRef.Id);
+            _actor.OnKill();
+            _onFinalize(_actor.SelfActorRef.Id);
         }
 
         internal void VerifyContext()

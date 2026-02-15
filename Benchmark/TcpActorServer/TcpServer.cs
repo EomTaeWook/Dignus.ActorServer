@@ -1,4 +1,5 @@
 ﻿using Dignus.Actor.Core.Actors;
+using Dignus.Actor.Core.Messages;
 using Dignus.Actor.Network;
 using Dignus.Log;
 using TcpActorServer.Messages;
@@ -11,7 +12,6 @@ namespace TcpActorServer
     {
         public TcpServer() : base(new MessageSerializer(), new MyPacketFramer())
         {
-            
         }
         protected override EchoActor CreateSessionActor(IActorRef transportActorRef)
         {
@@ -21,6 +21,11 @@ namespace TcpActorServer
         protected override void OnAccepted(IActorRef connectedActorRef)
         {
             LogHelper.Info($"OnAccepted : {connectedActorRef}");
+        }
+
+        protected override void OnDeadLetterMessage(DeadLetterMessage deadLetterMessage)
+        {
+            LogHelper.Error($"OnDeadLetterMessage : {deadLetterMessage}");
         }
 
         protected override void OnDisconnected(IActorRef connectedActorRef)

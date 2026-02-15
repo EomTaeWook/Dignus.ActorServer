@@ -11,11 +11,16 @@ using System.Threading;
 
 namespace Dignus.Actor.Core
 {
-    public class ActorSystem
+    public class ActorSystem : IActorRefProvider
     {
+        public event Action<DeadLetterMessage> OnDeadLetterDetected;
+
+        const int DefaultMailboxCapacity = 1024;
+
         private readonly ConcurrentDictionary<int, ActorRunner> _actors = new();
+        private readonly ConcurrentDictionary<string, int> _aliasToId = new();
         private readonly ActorDispatcher[] _dispatchers;
-        private int _nextId;
+        private int _nextActorId;
         public ActorSystem(int dispatcherThreadCount)
         {
             _dispatchers = new ActorDispatcher[dispatcherThreadCount];
@@ -25,54 +30,143 @@ namespace Dignus.Actor.Core
                 _dispatchers[i].Start();
             }
         }
-        public IActorRef Spawn<TActor>() where TActor : ActorBase, new()
+        public IActorRef Spawn<TActor>(string alias = null,
+            int mailboxCapacity = DefaultMailboxCapacity
+            ) where TActor : ActorBase, new()
         {
-            return SpawnInternal(new TActor());
+            return SpawnInternal(new TActor(), alias, mailboxCapacity);
         }
-        public IActorRef Spawn<TActor>(Func<TActor> factory) where TActor : ActorBase
+        public IActorRef Spawn<TActor>(Func<string, TActor> factory,
+            string alias = null,
+            int mailboxCapacity = DefaultMailboxCapacity
+            ) where TActor : ActorBase
         {
-            return SpawnInternal(factory());
+            return SpawnInternal(factory(alias), alias, mailboxCapacity);
+        }
+        public IActorRef Spawn<TActor>(Func<TActor> factory, 
+            int mailboxCapacity = DefaultMailboxCapacity
+            ) where TActor : ActorBase
+        {
+            return SpawnInternal(factory(), null, mailboxCapacity);
         }
 
-        private ActorRef SpawnInternal<TActor>(TActor actor) where TActor : ActorBase
+        private ActorRef SpawnInternal<TActor>(TActor actor, string alias, int mailboxCapacity) where TActor : ActorBase
         {
-            int id = Interlocked.Increment(ref _nextId);
+            int id = Interlocked.Increment(ref _nextActorId);
             int dispatcherIndex = id % _dispatchers.Length;
             var dispatcher = _dispatchers[dispatcherIndex];
 
-            var runner = new ActorRunner(actor, dispatcher, FinalizeKill);
+            var runner = new ActorRunner(actor, dispatcher, mailboxCapacity, FinalizeKill);
 
-            ActorRef actorRef = new(runner, id);
-
-            actor.Bind(dispatcher, actorRef);
+            ActorRef actorRef = new(this, id, alias);
 
             if (_actors.TryAdd(id, runner) == false)
             {
                 throw new InvalidOperationException($"Duplicate actor id.{id}");
             }
 
+            if (string.IsNullOrEmpty(alias) == false)
+            {
+                if (_aliasToId.TryAdd(alias, id) == false)
+                {
+                    _actors.TryRemove(id, out _);
+                    throw new InvalidOperationException($"Duplicate actor alias.{alias}");
+                }
+            }
+
+            actor.Bind(dispatcher, actorRef);
+
             return actorRef;
         }
-
-        internal void Post(int actorId, IActorMessage message, IActorRef sender)
+        internal void Post(int actorId, in ActorMail actorMail)
         {
-            if (_actors.TryGetValue(actorId, out var actorRunner) == false)
+            if (!_actors.TryGetValue(actorId, out var actorRunner))
+            {
+                PublishDeadLetter(actorMail.Message,
+                    actorMail.Sender,
+                    actorId,
+                    DeadLetterReason.RecipientInvalidated);
+                return;
+            }
+
+            var result = actorRunner.Enqueue(actorMail);
+
+            if (result == Internals.EnqueueResult.Success)
             {
                 return;
             }
 
-            actorRunner.Enqueue(message, sender);
+            switch (result)
+            {
+                case Internals.EnqueueResult.MailboxFull:
+                    PublishDeadLetter(actorMail.Message,
+                        actorMail.Sender,
+                        actorId,
+                        DeadLetterReason.MailboxFull);
+                    break;
+                case Internals.EnqueueResult.ActorStopped:
+                    PublishDeadLetter(actorMail.Message,
+                        actorMail.Sender,
+                        actorId,
+                        DeadLetterReason.ActorStopped);
+                    break;
+            }
+        }
+        internal void Post(int actorId, IActorMessage message, IActorRef sender)
+        {
+            Post(actorId, new ActorMail(message, sender));
         }
         internal void Kill(int actorId)
         {
-            if (_actors.TryGetValue(actorId, out var actor))
+            if (!_actors.TryGetValue(actorId, out var actorRunner))
             {
-                actor.Kill();
+                actorRunner.Kill();
             }
         }
         internal void FinalizeKill(int actorId)
         {
-            _actors.TryRemove(actorId, out _);
+            if(_actors.TryRemove(actorId, out var actorRunner))
+            {
+                var actor = actorRunner.GetActor();
+
+                if(!string.IsNullOrEmpty(actor.SelfActorRef.Alias))
+                {
+                    _aliasToId.TryRemove(actor.SelfActorRef.Alias, out _);
+                }
+            }
+        }
+
+        bool IActorRefProvider.TryGetActorRef(int id, out IActorRef actorRef)
+        {
+            return TryGetActorRef(id, out actorRef);
+        }
+        internal bool TryGetActorRef(int id, out IActorRef actorRef)
+        {
+            actorRef = null;
+            if (_actors.TryGetValue(id, out var actorRunner))
+            {
+                actorRef = actorRunner.GetActor().Self;
+                return true;
+            }
+            return false;
+        }
+
+        public bool TryGetActorRef(string alias, out IActorRef actorRef)
+        {
+            actorRef = null;
+            if (_aliasToId.TryGetValue(alias, out int id))
+            {
+                return TryGetActorRef(id, out actorRef);
+            }
+            return false;
+        }
+        internal void PublishDeadLetter(IActorMessage message, IActorRef sender, int recipientActorId, DeadLetterReason reason)
+        {
+            PublishDeadLetter(new DeadLetterMessage(message, sender, recipientActorId, reason));
+        }
+        internal void PublishDeadLetter(DeadLetterMessage message)
+        {
+            OnDeadLetterDetected?.Invoke(message);
         }
     }
 }

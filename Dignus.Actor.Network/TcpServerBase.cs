@@ -4,6 +4,7 @@
 
 using Dignus.Actor.Core;
 using Dignus.Actor.Core.Actors;
+using Dignus.Actor.Core.Messages;
 using Dignus.Actor.Network.Actors;
 using Dignus.Actor.Network.Hosts;
 using Dignus.Actor.Network.Internals;
@@ -24,6 +25,7 @@ namespace Dignus.Actor.Network
         protected abstract TSessionActor CreateSessionActor(IActorRef transportActorRef);
         protected abstract void OnAccepted(IActorRef connectedActorRef);
         protected abstract void OnDisconnected(IActorRef connectedActorRef);
+        protected abstract void OnDeadLetterMessage(DeadLetterMessage deadLetterMessage);
 
         private readonly ConcurrentDictionary<int, IActorRef> _sessionActors = new();
 
@@ -44,6 +46,7 @@ namespace Dignus.Actor.Network
             options.ActorSystem ??= new ActorSystemOptions();
 
             _actorSystem = new ActorSystem(options.ActorSystem.DispatcherThreadCount);
+            _actorSystem.OnDeadLetterDetected += OnDeadLetterDetected;
 
             _actorPacketProcessor = new ActorPacketProcessor(_actorNetworkOptions.Decoder, this);
 
@@ -51,6 +54,16 @@ namespace Dignus.Actor.Network
                 CreateHostConfigurationFactory(options),
                 options.Network.InitialSessionPoolSize);
         }
+        ~TcpServerBase() 
+        {
+            _actorSystem.OnDeadLetterDetected -= OnDeadLetterDetected;
+        }
+
+        private void OnDeadLetterDetected(DeadLetterMessage obj)
+        {
+            OnDeadLetterMessage(obj);
+        }
+
         public TcpServerBase(IActorMessageSerializer serializer,
             IMessageDecoder decoder) : this(ServerOptions.Builder()
                                         .UseSerializer(serializer)
@@ -71,6 +84,12 @@ namespace Dignus.Actor.Network
         public bool TryGetActorRef(int sessionId, out IActorRef actorRef)
         {
             return _sessionActors.TryGetValue(sessionId, out actorRef);
+        }
+
+        bool IActorRefProvider.TryGetActorRef(string alias, out IActorRef actorRef)
+        {
+            actorRef = null;
+            return false;
         }
 
         void IActorHostHandler.OnAccepted(ISession session)

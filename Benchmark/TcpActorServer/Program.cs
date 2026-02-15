@@ -15,7 +15,7 @@ LogHelper.Info("actor server start");
 Console.Read();
 
 
-void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
 {
     LogHelper.Error(e.ExceptionObject as Exception);
 }

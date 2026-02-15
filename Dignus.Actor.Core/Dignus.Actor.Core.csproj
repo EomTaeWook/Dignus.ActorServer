@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dignus" Version="1.0.12" />
+    <PackageReference Include="Dignus" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>

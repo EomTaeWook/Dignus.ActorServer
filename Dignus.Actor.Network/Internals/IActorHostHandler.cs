@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 // Part of Dignus.ActorServer
 
+using Dignus.Actor.Core.Messages;
 using Dignus.Sockets.Interfaces;
 using System;
 
@@ -18,6 +19,5 @@ namespace Dignus.Actor.Network.Internals
         void OnHandshaking(ISession session);
 
         void OnHandshakeFailed(ISession session, Exception ex);
-
     }
 }

@@ -11,43 +11,29 @@ namespace Dignus.Actor.Core.Actors
     {
         void Post(IActorMessage message, IActorRef sender = null);
         void Post(in ActorMail actorMail);
-
         void Kill();
     }
 
-    internal class ActorRef(ActorRunner actorRunner, int id) : IActorRef
+    internal class ActorRef(ActorSystem actorSystem,
+        int id,
+        string alias) : IActorRef
     {
-        public override string ToString()
-        {
-            return $"{base.ToString()} id: {id}";
-        }
-        public int Id => id;
-
-        private ActorRunner _actorRunner = actorRunner;
+        public int Id { get => id; }
+        public string Alias { get => alias; }
 
         public void Post(IActorMessage message, IActorRef sender)
         {
             ArgumentNullException.ThrowIfNull(message);
-            _actorRunner.Enqueue(message, sender);
+            actorSystem.Post(id, message, sender);
         }
         public void Post(in ActorMail actorMail)
         {
-            _actorRunner.Enqueue(actorMail);
+            actorSystem.Post(id, in actorMail);
         }
 
         public void Kill()
         {
-            var actorRunner = _actorRunner;
-            if (actorRunner == null)
-            {
-                return;
-            }
-            actorRunner.Kill();
-        }
-        
-        public void Invalidate()
-        {
-            _actorRunner = null;
+            actorSystem.Kill(id);
         }
     }
 }

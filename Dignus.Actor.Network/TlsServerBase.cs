@@ -4,6 +4,7 @@
 
 using Dignus.Actor.Core;
 using Dignus.Actor.Core.Actors;
+using Dignus.Actor.Core.Messages;
 using Dignus.Actor.Network.Actors;
 using Dignus.Actor.Network.Hosts;
 using Dignus.Actor.Network.Internals;
@@ -19,14 +20,15 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Dignus.Actor.Network
 {
-    public abstract class TlsServerBase<TSessionActor> : IActorTlsHostHandler, IActorRefProvider
+    public abstract class TlsServerBase<TSessionActor> 
+        : IActorTlsHostHandler, IActorRefProvider
         where TSessionActor : SessionActor
     {
         protected abstract TSessionActor CreateSessionActor(IActorRef transportActorRef);
         protected abstract void OnAccepted(IActorRef connectedActorRef);
         protected abstract void OnDisconnected(IActorRef connectedActorRef);
-
         protected abstract void OnHandshakeFailed(ISession session, Exception ex);
+        protected abstract void OnDeadLetterMessage(DeadLetterMessage deadLetterMessage);
 
         private readonly ActorSystem _actorSystem;
 
@@ -59,14 +61,20 @@ namespace Dignus.Actor.Network
 
             _actorSystem = new ActorSystem(options.ActorSystem.DispatcherThreadCount);
 
+            _actorSystem.OnDeadLetterDetected += OnDeadLetterDetected;
+
             _actorPacketProcessor = new ActorPacketProcessor(_actorNetworkOptions.Decoder, this);
 
             _actorTlsHost = new ActorTlsHost(this,
                 CreateHostConfigurationFactory(options),
                 options.TlsOptions,
                 options.Network.InitialSessionPoolSize);
-            
         }
+        ~TlsServerBase()
+        {
+            _actorSystem.OnDeadLetterDetected -= OnDeadLetterDetected;
+        }
+
         void IActorHostHandler.OnAccepted(ISession session)
         {
             IActorRef transportRef = _actorSystem.Spawn(() => new TransportActor(session));
@@ -122,10 +130,18 @@ namespace Dignus.Actor.Network
         {
             return _sessionActors.TryGetValue(sessionId, out actorRef);
         }
-
+        bool IActorRefProvider.TryGetActorRef(string alias, out IActorRef actorRef)
+        {
+            actorRef = null;
+            return false;
+        }
         void IActorTlsHostHandler.OnHandshakeFailed(ISession session, Exception ex)
         {
             OnHandshakeFailed(session, ex);
+        }
+        private void OnDeadLetterDetected(DeadLetterMessage obj)
+        {
+            OnDeadLetterMessage(obj);
         }
     }
 }
