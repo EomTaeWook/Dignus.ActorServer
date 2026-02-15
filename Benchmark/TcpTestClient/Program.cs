@@ -18,7 +18,7 @@ namespace TcpEchoClient
                     [echoSerializer]);
         }
 
-        private static void SingleBechmark()
+        private static void RoundTripBechmark(int clientCount)
         {
             var clients = new List<ClientModule>();
             LogHelper.Info($"start");
@@ -29,17 +29,23 @@ namespace TcpEchoClient
             sessionConfiguration.SocketOption.MaxPendingSendBytes = int.MaxValue;
 
             {
-                var client = new ClientModule(sessionConfiguration);
+                for (int i = 0; i < clientCount; ++i)
+                {
+                    try
+                    {
+                        var client = new ClientModule(sessionConfiguration);
+                        clients.Add(client);        
+                    }
+                    catch (Exception ex)
+                    {
+                        LogHelper.Error(ex);
+                    }
+                }
 
-                try
+                foreach(var client in clients)
                 {
                     client.Connect("127.0.0.1", 5000);
-                    clients.Add(client);
                     client.SendMessage(Consts.Message, 1000);
-                }
-                catch (Exception ex)
-                {
-                    LogHelper.Error(ex);
                 }
             }
 
@@ -67,7 +73,7 @@ namespace TcpEchoClient
 
             ProtocolHandlerMapper<EchoHandler, string>.BindProtocol<SCProtocol>();
             //EchoTest
-            SingleBechmark();
+            RoundTripBechmark(100);
 
             Console.ReadLine();
         }
