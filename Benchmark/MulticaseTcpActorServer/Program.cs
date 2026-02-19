@@ -1,4 +1,5 @@
 ﻿// See https://aka.ms/new-console-template for more information
+using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Network.Messages;
 using Dignus.Log;
 using Multicast.TcpActorServer;
@@ -30,12 +31,14 @@ internal class Program
             byte[] message = new byte[messageSize];
             var binaryMessage = new BinaryMessage(message);
 
+            var sessions = new List<IActorRef>(echoServer.GetAllSessionActors());
+
             while (multicasting)
             {
                 var start = DateTime.UtcNow;
                 for (int i = 0; i < messagesRate; i++)
                 {
-                    foreach (var session in echoServer.GetAllSessionActors())
+                    foreach (var session in sessions)
                     {
                         session.Post(binaryMessage);
                     }
@@ -58,7 +61,6 @@ internal class Program
 
         Console.ReadLine();
         multicasting = false;
-
 
         static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {

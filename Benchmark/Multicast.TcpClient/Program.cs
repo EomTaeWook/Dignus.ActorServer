@@ -57,6 +57,7 @@ namespace Multicast.TcpClient
             LogHelper.Info("client all connected");
             LogHelper.Info("Press any key to start benchmark...");
             Console.ReadLine();
+            LogHelper.Info("Multicast benchmark started.");
 
             Monitor.Instance.Start();
             Task.Delay(10000).GetAwaiter().GetResult();

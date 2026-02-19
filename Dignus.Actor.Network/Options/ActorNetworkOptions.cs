@@ -12,6 +12,7 @@ namespace Dignus.Actor.Network.Options
     {
         public IActorMessageSerializer MessageSerializer { get; set; }
         public IMessageDecoder Decoder { get; set; }
+        public int MailboxCapacity { get; set; } = 1024;
         public SocketOption SocketOption { get; set; }
         public int InitialSessionPoolSize { get; set; } = 0;
     }

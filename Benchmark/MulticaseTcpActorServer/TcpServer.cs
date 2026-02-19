@@ -24,7 +24,7 @@ namespace Multicast.TcpActorServer
 
         protected override void OnDeadLetterMessage(DeadLetterMessage deadLetterMessage)
         {
-            LogHelper.Error($"OnDeadLetterMessage : {deadLetterMessage}");
+            LogHelper.Error($"OnDeadLetterMessage : {deadLetterMessage.Reason}");
         }
 
         protected override void OnDisconnected(IActorRef connectedActorRef)

@@ -41,6 +41,11 @@ namespace Dignus.Actor.Network
             ArgumentNullException.ThrowIfNull(options.Network);
             ArgumentNullException.ThrowIfNull(options.Network.Decoder);
             ArgumentNullException.ThrowIfNull(options.Network.MessageSerializer);
+            if(options.Network.MailboxCapacity <=0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(options.Network.MailboxCapacity));
+            }
+
 
             _actorNetworkOptions = options.Network;
 
@@ -95,14 +100,14 @@ namespace Dignus.Actor.Network
 
         void IActorHostHandler.OnAccepted(ISession session)
         {
-            IActorRef transportRef = _actorSystem.Spawn(() => new TransportActor(session));
+            IActorRef transportRef = _actorSystem.Spawn(() => new TransportActor(session), _actorNetworkOptions.MailboxCapacity);
 
             IActorRef sessionRef = _actorSystem.Spawn(() => 
             {
                 var sessionActor = CreateSessionActor(transportRef);
                 sessionActor.Initialize(_actorNetworkOptions.MessageSerializer);
                 return sessionActor;
-            });
+            }, _actorNetworkOptions.MailboxCapacity);
 
             _sessionActors[session.Id] = sessionRef;
 
