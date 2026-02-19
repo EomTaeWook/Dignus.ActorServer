@@ -15,6 +15,7 @@ using Dignus.Sockets;
 using Dignus.Sockets.Interfaces;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net;
 
 namespace Dignus.Actor.Network
@@ -132,6 +133,11 @@ namespace Dignus.Actor.Network
         public void Close()
         {
             _actorTcpHost.Close();
+        }
+
+        public ICollection<IActorRef> GetAllSessionActors()
+        {
+            return _sessionActors.Values;
         }
     }
 }

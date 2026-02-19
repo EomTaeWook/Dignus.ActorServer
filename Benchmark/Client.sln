@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpEchoClient", "TcpTestCli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TlsTestClient", "TlsTestClient\TlsTestClient.csproj", "{63D3AC38-BF75-440B-9918-D9B062927FB7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Multicast.TcpClient", "Multicast.TcpClient\Multicast.TcpClient.csproj", "{9B976E87-0CE0-4487-AD39-03B2F01C0BF8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{63D3AC38-BF75-440B-9918-D9B062927FB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63D3AC38-BF75-440B-9918-D9B062927FB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63D3AC38-BF75-440B-9918-D9B062927FB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B976E87-0CE0-4487-AD39-03B2F01C0BF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B976E87-0CE0-4487-AD39-03B2F01C0BF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B976E87-0CE0-4487-AD39-03B2F01C0BF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B976E87-0CE0-4487-AD39-03B2F01C0BF8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

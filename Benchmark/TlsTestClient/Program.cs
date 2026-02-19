@@ -21,7 +21,7 @@ internal class Program
                 [echoPacketProcessor]);
     }
 
-    private static void RoundTripBechmark(int clientCount)
+    private static void RoundTripBechmark()
     {
         var clients = new List<ClientModule>();
         LogHelper.Info($"start");
@@ -39,7 +39,7 @@ internal class Program
             var tlsOption = new TlsClientOptions("localhost", clientCert);
 
 
-            for (int i = 0; i < clientCount; ++i)
+            for (int i = 0; i < 1; ++i)
             {
                 try
                 {
@@ -82,7 +82,7 @@ internal class Program
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
         //EchoTest
-        RoundTripBechmark(100);
+        RoundTripBechmark();
 
         Console.ReadLine();
     }

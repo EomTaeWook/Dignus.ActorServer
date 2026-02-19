@@ -15,6 +15,7 @@ using Dignus.Sockets;
 using Dignus.Sockets.Interfaces;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 
@@ -147,6 +148,10 @@ namespace Dignus.Actor.Network
         private void OnDeadLetterDetected(DeadLetterMessage obj)
         {
             OnDeadLetterMessage(obj);
+        }
+        public IEnumerable<IActorRef> GetAllSessions()
+        {
+            return _sessionActors.Values;
         }
     }
 }

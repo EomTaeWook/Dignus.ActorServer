@@ -1,5 +1,7 @@
 <Solution>
   <Folder Name="/Benchmark/">
+    <File Path="Benchmark/TcpActorServer/TcpServer.cs" />
+    <Project Path="Benchmark/MulticaseTcpActorServer/Multicast.TcpActorServer.csproj" Id="85b75151-0e30-42e6-a3e9-56aeb845650e" />
     <Project Path="Benchmark/TcpActorServer/TcpActorServer.csproj" />
     <Project Path="Benchmark/TlsActorServer/TlsActorServer.csproj" />
   </Folder>

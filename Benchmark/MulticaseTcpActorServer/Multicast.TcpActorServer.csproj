@@ -12,9 +12,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Dignus.ActorServer">
-      <HintPath>..\..\publish\dll\net10.0\Dignus.ActorServer.dll</HintPath>
-    </Reference>
+    <Folder Include="Messages\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Dignus.Actor.Core\Dignus.Actor.Core.csproj" />
+    <ProjectReference Include="..\..\Dignus.Actor.Network\Dignus.Actor.Network.csproj" />
   </ItemGroup>
 
   <ItemGroup>

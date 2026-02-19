@@ -4,13 +4,13 @@ using Dignus.Actor.Network.Serialization;
 using Dignus.Sockets.Interfaces;
 using System.Buffers;
 
-namespace TcpActorServer.Messages
+namespace Multicast.TcpActorServer.Networks
 {
     internal class MessageSerializer : IActorMessageSerializer
     {
         public IActorMessage Deserialize(ArraySegment<byte> bytes)
         {
-            return new BinaryMessage(bytes);
+            return new BinaryMessage(bytes.Array);
         }
 
         public ArraySegment<byte> MakeSendBuffer(IPacket packet)
