@@ -13,12 +13,12 @@ namespace TcpActorServer.Messages
             return new BinaryMessage(bytes.Array);
         }
 
-        public ArraySegment<byte> MakeSendBuffer(IActorMessage packet)
+        public ArraySegment<byte> MakeSendBuffer(IPacket packet)
         {
             return new ArraySegment<byte>();
         }
 
-        public ArraySegment<byte> MakeSendBuffer(IPacket packet)
+        public ArraySegment<byte> MakeSendBuffer(INetworkActorMessage packet)
         {
             return new ArraySegment<byte>();
         }

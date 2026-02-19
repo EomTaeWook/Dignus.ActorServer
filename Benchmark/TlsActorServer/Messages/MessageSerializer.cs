@@ -2,7 +2,6 @@
 using Dignus.Actor.Network.Messages;
 using Dignus.Actor.Network.Serialization;
 using Dignus.Sockets.Interfaces;
-using System.Buffers;
 
 namespace TlsActorServer.Messages
 {
@@ -10,10 +9,10 @@ namespace TlsActorServer.Messages
     {
         public IActorMessage Deserialize(ArraySegment<byte> bytes)
         {
-            return new BinaryMessage(bytes.Array);
+            return new BinaryMessage(bytes);
         }
 
-        public ArraySegment<byte> MakeSendBuffer(IActorMessage packet)
+        public ArraySegment<byte> MakeSendBuffer(INetworkActorMessage packet)
         {
             return new ArraySegment<byte>();
         }

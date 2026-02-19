@@ -79,7 +79,12 @@ namespace Dignus.Actor.Network
         {
             IActorRef transportRef = _actorSystem.Spawn(() => new TransportActor(session));
 
-            IActorRef sessionRef = _actorSystem.Spawn(() => CreateSessionActor(transportRef));
+            IActorRef sessionRef = _actorSystem.Spawn(() =>
+            {
+                var sessionActor = CreateSessionActor(transportRef);
+                sessionActor.Initialize(_actorNetworkOptions.MessageSerializer);
+                return sessionActor;
+            });
 
             _sessionActors[session.Id] = sessionRef;
 

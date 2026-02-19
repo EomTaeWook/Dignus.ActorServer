@@ -3,6 +3,7 @@
 // Part of Dignus.ActorServer
 
 using Dignus.Actor.Core.Messages;
+using Dignus.Actor.Network.Messages;
 using Dignus.Sockets.Interfaces;
 using System;
 
@@ -10,6 +11,6 @@ namespace Dignus.Actor.Network.Serialization
 {
     public interface IActorMessageSerializer : IPacketSerializer
     {
-        ArraySegment<byte> MakeSendBuffer(IActorMessage packet);
+        ArraySegment<byte> MakeSendBuffer(INetworkActorMessage packet);
     }
 }
