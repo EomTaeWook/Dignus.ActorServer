@@ -18,13 +18,13 @@ namespace Dignus.Actor.Core.Actors
         Action<int> onFinalize
         ) : IActorSchedulable
     {
-        internal static void EnqueueContinuation(object state)
+        internal static void ContinuationAction(Task completedTask, object state)
         {
             var runner = (ActorRunner)state;
+
             try
             {
-                var task = Volatile.Read(ref runner._pendingReceiveTask);
-                task.GetAwaiter().GetResult();
+                completedTask.GetAwaiter().GetResult();
             }
             catch (Exception)
             {
@@ -107,14 +107,9 @@ namespace Dignus.Actor.Core.Actors
                     continue;
                 }
 
-                _pendingReceiveTask = valueTask.AsTask();
-
-                _pendingReceiveTask.ContinueWith((task, state) => 
-                {
-                    var runner = (ActorRunner)state;
-                    runner._dispatcher.EnqueueContinuation(EnqueueContinuation, state);
-                },
-                this);
+                Task receiveTask = valueTask.AsTask();
+                Volatile.Write(ref _pendingReceiveTask, receiveTask);
+                _pendingReceiveTask.ContinueWith(ContinuationAction, this);
                 return;
             }
 

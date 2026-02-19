@@ -59,22 +59,29 @@ namespace Dignus.Actor.Core
             var runner = new ActorRunner(actor, dispatcher, mailboxCapacity, FinalizeKill);
 
             ActorRef actorRef = new(this, id, alias);
+            actor.Bind(dispatcher, actorRef);
 
-            if (_actors.TryAdd(id, runner) == false)
+            try
             {
-                throw new InvalidOperationException($"Duplicate actor id.{id}");
-            }
-
-            if (string.IsNullOrEmpty(alias) == false)
-            {
-                if (_aliasToId.TryAdd(alias, id) == false)
+                if (_actors.TryAdd(id, runner) == false)
                 {
-                    _actors.TryRemove(id, out _);
-                    throw new InvalidOperationException($"Duplicate actor alias.{alias}");
+                    throw new InvalidOperationException($"Duplicate actor id.{id}");
+                }
+
+                if (string.IsNullOrEmpty(alias) == false)
+                {
+                    if (_aliasToId.TryAdd(alias, id) == false)
+                    {
+                        _actors.TryRemove(id, out _);
+                        throw new InvalidOperationException($"Duplicate actor alias.{alias}");
+                    }
                 }
             }
-
-            actor.Bind(dispatcher, actorRef);
+            catch(Exception)
+            {
+                runner.Kill();
+                throw;
+            }
 
             return actorRef;
         }
@@ -118,7 +125,7 @@ namespace Dignus.Actor.Core
         }
         internal void Kill(int actorId)
         {
-            if (!_actors.TryGetValue(actorId, out var actorRunner))
+            if (_actors.TryGetValue(actorId, out var actorRunner) == true)
             {
                 actorRunner.Kill();
             }
