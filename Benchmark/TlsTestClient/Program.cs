@@ -21,7 +21,7 @@ internal class Program
                 [echoPacketProcessor]);
     }
 
-    private static void SingleBechmark()
+    private static void RoundTripBechmark(int clientCount)
     {
         var clients = new List<ClientModule>();
         LogHelper.Info($"start");
@@ -38,17 +38,24 @@ internal class Program
 
             var tlsOption = new TlsClientOptions("localhost", clientCert);
 
-            var client = new ClientModule(sessionConfiguration, tlsOption);
 
-            try
+            for (int i = 0; i < clientCount; ++i)
+            {
+                try
+                {
+                    var client = new ClientModule(sessionConfiguration, tlsOption);
+                    clients.Add(client);
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.Error(ex);
+                }
+            }
+
+            foreach (var client in clients)
             {
                 client.Connect("127.0.0.1", 5000);
-                clients.Add(client);
                 client.SendMessage(Consts.Message, 1000);
-            }
-            catch (Exception ex)
-            {
-                LogHelper.Error(ex);
             }
         }
 
@@ -75,7 +82,7 @@ internal class Program
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
         //EchoTest
-        SingleBechmark();
+        RoundTripBechmark(100);
 
         Console.ReadLine();
     }

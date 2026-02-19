@@ -51,13 +51,53 @@ Message Throughput: 10,208,278 msg/s
 
 ---
 
+### Multi-Client Round-Trip Benchmark (Plain TCP)
+
+<p align="center">
+  <img src="Benchmark/Result/tcp-round-trip-100.png" width="600" />
+</p>
+
+### Test Conditions
+
+- Server address: 127.0.0.1
+- Server port: 5000
+- Protocol: Plain TCP (no TLS)
+- Working clients: 100
+- In-flight messages per client: 1000
+- Message size: 32 bytes
+- Benchmark duration: 10 seconds
+
+### Result
+
+```
+Total Time: 10.018 seconds
+Total Client: 100
+Total Bytes: 11,134,485,952
+Total Data: 10.37 GiB
+Total Message: 347,952,686
+Data Throughput: 1059.93 MiB/s
+Message Throughput: 34,731,730 msg/s
+```
+
+---
+
 ### TLS Round-Trip Benchmark
 
 <p align="center">
   <img src="Benchmark/Result/tls-round-trip.png" width="600" />
 </p>
 
-Result:
+### Test Conditions
+
+- Server address: 127.0.0.1
+- Server port: 5000
+- Protocol: TLS over TCP
+- Working clients: 1
+- In-flight messages per client: 1000
+- Message size: 32 bytes
+- Benchmark duration: 10 seconds
+
+### Result
 
 ```
 Total Time: 10.002 seconds
@@ -67,6 +107,36 @@ Total Data: 2.31 GiB
 Total Message: 77,571,857
 Data Throughput: 236.68 MiB/s
 Message Throughput: 7,755,636 msg/s
+```
+
+---
+
+### Multi-Client Round-Trip Benchmark (Tls)
+
+<p align="center">
+  <img src="Benchmark/Result/tls-round-trip-100.png" width="600" />
+</p>
+
+### Test Conditions
+
+- Server address: 127.0.0.1
+- Server port: 5000
+- Protocol: TLS over TCP
+- Working clients: 100
+- In-flight messages per client: 1000
+- Message size: 32 bytes
+- Benchmark duration: 10 seconds
+
+### Result
+
+```
+Total Time: 10.024 seconds
+Total Client: 100
+Total Bytes: 8,155,498,784
+Total Data: 7.60 GiB
+Total Message: 254,859,337
+Data Throughput: 775.92 MiB/s
+Message Throughput: 25,425,510 msg/s
 ```
 
 ---
