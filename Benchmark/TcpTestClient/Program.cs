@@ -70,10 +70,8 @@ namespace TcpEchoClient
             LogBuilder.Build();
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-
-            ProtocolHandlerMapper<EchoHandler, string>.BindProtocol<SCProtocol>();
             //EchoTest
-            RoundTripBechmark(100);
+            RoundTripBechmark(1);
 
             Console.ReadLine();
         }

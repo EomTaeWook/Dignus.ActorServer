@@ -5,7 +5,6 @@ using Dignus.Actor.Network.Serialization;
 using Dignus.Sockets;
 using Dignus.Sockets.Interfaces;
 using System;
-using System.Net.Sockets;
 
 namespace Dignus.Actor.Network.Actors
 {
@@ -30,6 +29,11 @@ namespace Dignus.Actor.Network.Actors
         public void Kill()
         {
             _sessionActorRef.Kill();
+        }
+
+        public void CloseSession()
+        {
+            _session.Dispose();
         }
 
         public void Post(IActorMessage message, IActorRef sender = null)

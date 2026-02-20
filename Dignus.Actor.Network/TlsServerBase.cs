@@ -93,7 +93,7 @@ namespace Dignus.Actor.Network
                                     session,
                                     _actorNetworkOptions.MessageSerializer);
 
-            sessionActor.SetNetworkSession(networkSessionRef);
+            sessionActor.SetNetworkSessionRef(networkSessionRef);
             _sessionActors[session.Id] = networkSessionRef;
             OnAccepted(sessionActor.Self);
         }

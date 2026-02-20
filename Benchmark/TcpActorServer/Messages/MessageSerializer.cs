@@ -20,7 +20,11 @@ namespace TcpActorServer.Messages
 
         public ArraySegment<byte> MakeSendBuffer(INetworkActorMessage packet)
         {
-            return new ArraySegment<byte>();
+            if(packet is BinaryMessage binaryMessage)
+            {
+                return binaryMessage.Data;
+            }
+            return null;
         }
     }
 }
