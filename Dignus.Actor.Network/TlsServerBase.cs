@@ -23,9 +23,9 @@ namespace Dignus.Actor.Network
 {
     public abstract class TlsServerBase<TSessionActor> 
         : IActorTlsHostHandler, IActorRefProvider
-        where TSessionActor : SessionActor
+        where TSessionActor : SessionActorBase
     {
-        protected abstract TSessionActor CreateSessionActor(IActorRef transportActorRef);
+        protected abstract TSessionActor CreateSessionActor();
         protected abstract void OnAccepted(IActorRef connectedActorRef);
         protected abstract void OnDisconnected(IActorRef connectedActorRef);
         protected abstract void OnHandshakeFailed(ISession session, Exception ex);
@@ -37,7 +37,7 @@ namespace Dignus.Actor.Network
         private readonly ActorPacketProcessor _actorPacketProcessor;
         private readonly ActorNetworkOptions _actorNetworkOptions;
 
-        private readonly ConcurrentDictionary<int, IActorRef> _sessionActors = new();
+        private readonly ConcurrentDictionary<int, INetworkSessionRef> _sessionActors = new();
 
         public TlsServerBase(X509Certificate2 serverCertificate,
             IActorMessageSerializer serializer,
@@ -79,21 +79,23 @@ namespace Dignus.Actor.Network
         {
             _actorSystem.OnDeadLetterDetected -= OnDeadLetterDetected;
         }
-
+        private TSessionActor CreateSessionActorFactory()
+        {
+            return CreateSessionActor();
+        }
         void IActorHostHandler.OnAccepted(ISession session)
         {
-            IActorRef transportRef = _actorSystem.Spawn(() => new TransportActor(session), _actorNetworkOptions.MailboxCapacity);
+            var sessionActor = _actorSystem.SpawnInternal(CreateSessionActorFactory(),
+                null,
+                _actorNetworkOptions.MailboxCapacity);
 
-            IActorRef sessionRef = _actorSystem.Spawn(() =>
-            {
-                var sessionActor = CreateSessionActor(transportRef);
-                sessionActor.Initialize(_actorNetworkOptions.MessageSerializer);
-                return sessionActor;
-            }, _actorNetworkOptions.MailboxCapacity);
+            var networkSessionRef = new NetworkSessionRef(sessionActor.Self,
+                                    session,
+                                    _actorNetworkOptions.MessageSerializer);
 
-            _sessionActors[session.Id] = sessionRef;
-
-            OnAccepted(sessionRef);
+            sessionActor.SetNetworkSession(networkSessionRef);
+            _sessionActors[session.Id] = networkSessionRef;
+            OnAccepted(sessionActor.Self);
         }
 
         public void Start(string ip, int port, int backlog)
@@ -138,7 +140,13 @@ namespace Dignus.Actor.Network
 
         public bool TryGetActorRef(int sessionId, out IActorRef actorRef)
         {
-            return _sessionActors.TryGetValue(sessionId, out actorRef);
+            actorRef = null;
+            if (_sessionActors.TryGetValue(sessionId, out var session))
+            {
+                actorRef = session;
+                return true;
+            }
+            return false;
         }
         bool IActorRefProvider.TryGetActorRef(string alias, out IActorRef actorRef)
         {
@@ -153,9 +161,12 @@ namespace Dignus.Actor.Network
         {
             OnDeadLetterMessage(obj);
         }
-        public IEnumerable<IActorRef> GetAllSessions()
+        public void Broadcast(byte[] bytes)
         {
-            return _sessionActors.Values;
+            foreach (var session in _sessionActors.Values)
+            {
+                session.SendAsync(bytes);
+            }
         }
     }
 }

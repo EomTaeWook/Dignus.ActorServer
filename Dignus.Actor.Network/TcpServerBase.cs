@@ -15,20 +15,19 @@ using Dignus.Sockets;
 using Dignus.Sockets.Interfaces;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Net;
 
 namespace Dignus.Actor.Network
 {
     public abstract class TcpServerBase<TSessionActor> : IActorHostHandler, IActorRefProvider
-        where TSessionActor : SessionActor
+        where TSessionActor : SessionActorBase
     {
-        protected abstract TSessionActor CreateSessionActor(IActorRef transportActorRef);
-        protected abstract void OnAccepted(IActorRef connectedActorRef);
+        protected abstract TSessionActor CreateSessionActor();
+        protected abstract void OnAccepted(IActorRef transport);
         protected abstract void OnDisconnected(IActorRef connectedActorRef);
         protected abstract void OnDeadLetterMessage(DeadLetterMessage deadLetterMessage);
 
-        private readonly ConcurrentDictionary<int, IActorRef> _sessionActors = new();
+        private readonly ConcurrentDictionary<int, INetworkSessionRef> _sessionActors = new();
 
         private readonly ActorNetworkOptions _actorNetworkOptions;
         private readonly ActorSystem _actorSystem;
@@ -89,7 +88,13 @@ namespace Dignus.Actor.Network
 
         public bool TryGetActorRef(int sessionId, out IActorRef actorRef)
         {
-            return _sessionActors.TryGetValue(sessionId, out actorRef);
+            actorRef = null;
+            if(_sessionActors.TryGetValue(sessionId, out var session))
+            {
+                actorRef = session;
+                return true;
+            }
+            return false;
         }
 
         bool IActorRefProvider.TryGetActorRef(string alias, out IActorRef actorRef)
@@ -97,21 +102,23 @@ namespace Dignus.Actor.Network
             actorRef = null;
             return false;
         }
-
+        private TSessionActor CreateSessionActorFactory()
+        {
+            return CreateSessionActor();
+        }
         void IActorHostHandler.OnAccepted(ISession session)
         {
-            IActorRef transportRef = _actorSystem.Spawn(() => new TransportActor(session), _actorNetworkOptions.MailboxCapacity);
+            var sessionActor = _actorSystem.SpawnInternal(CreateSessionActorFactory(),
+                null,
+                _actorNetworkOptions.MailboxCapacity);
 
-            IActorRef sessionRef = _actorSystem.Spawn(() => 
-            {
-                var sessionActor = CreateSessionActor(transportRef);
-                sessionActor.Initialize(_actorNetworkOptions.MessageSerializer);
-                return sessionActor;
-            }, _actorNetworkOptions.MailboxCapacity);
+            var networkSessionRef = new NetworkSessionRef(sessionActor.Self,
+                                    session,
+                                    _actorNetworkOptions.MessageSerializer);
 
-            _sessionActors[session.Id] = sessionRef;
-
-            OnAccepted(sessionRef);
+            sessionActor.SetNetworkSession(networkSessionRef);
+            _sessionActors[session.Id] = networkSessionRef;
+            OnAccepted(sessionActor.Self);
         }
 
         void IActorHostHandler.OnDisconnected(ISession session)
@@ -140,9 +147,12 @@ namespace Dignus.Actor.Network
             _actorTcpHost.Close();
         }
 
-        public ICollection<IActorRef> GetAllSessionActors()
+        public void Broadcast(byte[] bytes)
         {
-            return _sessionActors.Values;
+            foreach(var session in _sessionActors.Values)
+            {
+                session.SendAsync(bytes);
+            }
         }
     }
 }

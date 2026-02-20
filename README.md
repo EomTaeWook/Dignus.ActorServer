@@ -51,7 +51,42 @@ Message Throughput: 10,208,278 msg/s
 
 ---
 
+### TCP Fan-out Benchmark (100 clients)
+
+Send pattern: Server broadcasts identical payload to all connected clients
+
+<p align="center">
+  <img src="Benchmark/Result/tcp-fan-out-100.png" width="600" />
+</p>
+
+### Test Conditions
+
+- Server address: 127.0.0.1
+- Server port: 5000
+- Protocol: Plain TCP (no TLS)
+- Working clients: 100
+- Message size: 32 bytes
+- Benchmark duration: 10 seconds
+
+### Result
+
+```
+Total Time: 10.011 seconds
+Total Client: 100
+Total Bytes: 3,947,244,352
+Total Data: 3.68 GiB
+Total Message: 123,351,386
+Data Throughput: 376.03 MiB/s
+Message Throughput: 12,321,589 msg/s
+```
+
+---
+
 ### TLS Round-Trip Benchmark
+
+This benchmark measures full round-trip throughput:
+
+Client send -> Server-side processing -> Response return
 
 <p align="center">
   <img src="Benchmark/Result/tls-round-trip.png" width="600" />

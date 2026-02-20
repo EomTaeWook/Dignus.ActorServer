@@ -1,6 +1,7 @@
 ﻿using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Core.Messages;
 using Dignus.Actor.Network;
+using Dignus.Actor.Network.Actors;
 using Dignus.Log;
 using Dignus.Sockets.Interfaces;
 using System.Security.Cryptography.X509Certificates;
@@ -12,9 +13,9 @@ namespace TlsActorServer
 {
     internal class TlsServer(X509Certificate2 certificate2) : TlsServerBase<EchoActor>(certificate2, new MessageSerializer(), new MyPacketFramer())
     {
-        protected override EchoActor CreateSessionActor(IActorRef transportActorRef)
+        protected override EchoActor CreateSessionActor()
         {
-            return new EchoActor(transportActorRef);
+            return new EchoActor();
         }
 
         protected override void OnAccepted(IActorRef connectedActorRef)

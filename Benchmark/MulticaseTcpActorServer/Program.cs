@@ -1,8 +1,12 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using Dignus.Actor.Core.Actors;
+using Dignus.Actor.Network.Actors;
 using Dignus.Actor.Network.Messages;
+using Dignus.Actor.Network.Options;
 using Dignus.Log;
 using Multicast.TcpActorServer;
+using Multicast.TcpActorServer.Networks;
+using Multicast.TcpActorServer.Networks.PacketFramer;
 
 internal class Program
 {
@@ -13,7 +17,13 @@ internal class Program
 
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-        TcpServer echoServer = new();
+        var option = ServerOptions.Builder()
+            .UseDecoder(new MyPacketFramer())
+            .UseSerializer(new MessageSerializer()).Build();
+
+        option.Network.MailboxCapacity = 65535;
+
+        TcpServer echoServer = new(option);
         echoServer.Start(5000);
 
         LogHelper.Info("actor server start");
@@ -29,21 +39,14 @@ internal class Program
         var task = Task.Run(() =>
         {
             byte[] message = new byte[messageSize];
-            var binaryMessage = new BinaryMessage(message);
-
-            var sessions = new List<IActorRef>(echoServer.GetAllSessionActors());
 
             while (multicasting)
             {
                 var start = DateTime.UtcNow;
                 for (int i = 0; i < messagesRate; i++)
                 {
-                    foreach (var session in sessions)
-                    {
-                        session.Post(binaryMessage);
-                    }
+                    echoServer.Broadcast(message);
                 }
-
                 var end = DateTime.UtcNow;
 
                 var milliseconds = (int)(end - start).TotalMilliseconds;

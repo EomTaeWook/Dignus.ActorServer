@@ -34,23 +34,23 @@ namespace Dignus.Actor.Core
             int mailboxCapacity = DefaultMailboxCapacity
             ) where TActor : ActorBase, new()
         {
-            return SpawnInternal(new TActor(), alias, mailboxCapacity);
+            return SpawnInternal(new TActor(), alias, mailboxCapacity).Self;
         }
         public IActorRef Spawn<TActor>(Func<string, TActor> factory,
             string alias = null,
             int mailboxCapacity = DefaultMailboxCapacity
             ) where TActor : ActorBase
         {
-            return SpawnInternal(factory(alias), alias, mailboxCapacity);
+            return SpawnInternal(factory(alias), alias, mailboxCapacity).Self;
         }
         public IActorRef Spawn<TActor>(Func<TActor> factory, 
             int mailboxCapacity = DefaultMailboxCapacity
             ) where TActor : ActorBase
         {
-            return SpawnInternal(factory(), null, mailboxCapacity);
+            return SpawnInternal(factory(), null, mailboxCapacity).Self;
         }
 
-        private ActorRef SpawnInternal<TActor>(TActor actor, string alias, int mailboxCapacity) where TActor : ActorBase
+        internal TActor SpawnInternal<TActor>(TActor actor, string alias, int mailboxCapacity) where TActor : ActorBase
         {
             int id = Interlocked.Increment(ref _nextActorId);
             int dispatcherIndex = id % _dispatchers.Length;
@@ -83,7 +83,7 @@ namespace Dignus.Actor.Core
                 throw;
             }
 
-            return actorRef;
+            return actor;
         }
         internal void Post(int actorId, in ActorMail actorMail)
         {

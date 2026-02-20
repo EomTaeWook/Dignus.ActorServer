@@ -10,7 +10,7 @@ namespace Multicast.TcpActorServer.Networks
     {
         public IActorMessage Deserialize(ArraySegment<byte> bytes)
         {
-            return new BinaryMessage(bytes.Array);
+            return new BinaryMessage(bytes);
         }
 
         public ArraySegment<byte> MakeSendBuffer(IPacket packet)
@@ -18,8 +18,12 @@ namespace Multicast.TcpActorServer.Networks
             return new ArraySegment<byte>();
         }
 
-        public ArraySegment<byte> MakeSendBuffer(INetworkActorMessage packet)
+        public ArraySegment<byte> MakeSendBuffer(INetworkActorMessage message)
         {
+            if(message is BinaryMessage binaryMessage)
+            {
+                return binaryMessage.Data;
+            }
             return new ArraySegment<byte>();
         }
     }

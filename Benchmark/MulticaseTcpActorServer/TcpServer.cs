@@ -1,6 +1,8 @@
 ﻿using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Core.Messages;
 using Dignus.Actor.Network;
+using Dignus.Actor.Network.Actors;
+using Dignus.Actor.Network.Options;
 using Dignus.Log;
 using Multicast.TcpActorServer.Networks;
 using Multicast.TcpActorServer.Networks.PacketFramer;
@@ -9,12 +11,12 @@ namespace Multicast.TcpActorServer
 {
     internal class TcpServer : TcpServerBase<EchoActor>
     {
-        public TcpServer() : base(new MessageSerializer(), new MyPacketFramer())
+        public TcpServer(ServerOptions serverOptions) : base(serverOptions)
         {
         }
-        protected override EchoActor CreateSessionActor(IActorRef transportActorRef)
+        protected override EchoActor CreateSessionActor()
         {
-            return new EchoActor(transportActorRef);
+            return new EchoActor();
         }
 
         protected override void OnAccepted(IActorRef connectedActorRef)

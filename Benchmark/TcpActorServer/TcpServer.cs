@@ -1,6 +1,7 @@
 ﻿using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Core.Messages;
 using Dignus.Actor.Network;
+using Dignus.Actor.Network.Actors;
 using Dignus.Log;
 using TcpActorServer.Messages;
 using TcpActorServer.Networks;
@@ -13,9 +14,9 @@ namespace TcpActorServer
         public TcpServer() : base(new MessageSerializer(), new MyPacketFramer())
         {
         }
-        protected override EchoActor CreateSessionActor(IActorRef transportActorRef)
+        protected override EchoActor CreateSessionActor()
         {
-            return new EchoActor(transportActorRef);
+            return new EchoActor();
         }
 
         protected override void OnAccepted(IActorRef connectedActorRef)

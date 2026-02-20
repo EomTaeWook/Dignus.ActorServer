@@ -11,6 +11,6 @@ namespace Dignus.Actor.Network.Serialization
 {
     public interface IActorMessageSerializer : IPacketSerializer
     {
-        ArraySegment<byte> MakeSendBuffer(INetworkActorMessage packet);
+        ArraySegment<byte> MakeSendBuffer(INetworkActorMessage message);
     }
 }
