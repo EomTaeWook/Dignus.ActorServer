@@ -11,8 +11,11 @@ namespace Dignus.Actor.Network
     public interface INetworkSession
     {
         SendResult Send(byte[] bytes);
-        SendResult SendAsync(byte[] bytes);
         SendResult Send(IPacket packet);
         SendResult Send(INetworkActorMessage message);
+
+        SendResult SendAsync(byte[] bytes);
+        SendResult SendAsync(IPacket packet);
+        SendResult SendAsync(INetworkActorMessage message);
     }
 }

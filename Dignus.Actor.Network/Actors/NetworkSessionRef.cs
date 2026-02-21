@@ -49,10 +49,6 @@ namespace Dignus.Actor.Network.Actors
         {
             _sessionActorRef.Post(actorMail);
         }
-        public SendResult SendAsync(byte[] bytes)
-        {
-            return _session.SendAsync(bytes);
-        }
 
         public SendResult Send(byte[] bytes)
         {
@@ -61,12 +57,25 @@ namespace Dignus.Actor.Network.Actors
 
         public SendResult Send(IPacket packet)
         {
-            return _session.Send(packet);
+            return _session.Send(_serializer.MakeSendBuffer(packet));
         }
 
         public SendResult Send(INetworkActorMessage message)
         {
             return _session.Send(_serializer.MakeSendBuffer(message));
+        }
+        public SendResult SendAsync(byte[] bytes)
+        {
+            return _session.SendAsync(bytes);
+        }
+        public SendResult SendAsync(IPacket packet)
+        {
+            return _session.SendAsync(_serializer.MakeSendBuffer(packet));
+        }
+
+        public SendResult SendAsync(INetworkActorMessage message)
+        {
+            return _session.SendAsync(_serializer.MakeSendBuffer(message));
         }
     }
 }
