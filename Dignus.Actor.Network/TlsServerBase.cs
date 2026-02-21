@@ -15,7 +15,6 @@ using Dignus.Sockets;
 using Dignus.Sockets.Interfaces;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 
@@ -55,9 +54,12 @@ namespace Dignus.Actor.Network
             ArgumentNullException.ThrowIfNull(options.Network.Decoder);
             ArgumentNullException.ThrowIfNull(options.Network.MessageSerializer);
             ArgumentNullException.ThrowIfNull(options.TlsOptions);
+
             if (options.Network.MailboxCapacity <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(options.Network.MailboxCapacity));
+                throw new ArgumentOutOfRangeException(nameof(options),
+                    options.Network.MailboxCapacity,
+                    "options.Network.MailboxCapacity must be greater than 0.");
             }
 
             _actorNetworkOptions = options.Network;

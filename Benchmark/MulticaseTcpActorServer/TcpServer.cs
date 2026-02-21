@@ -9,11 +9,8 @@ using Multicast.TcpActorServer.Networks.PacketFramer;
 
 namespace Multicast.TcpActorServer
 {
-    internal class TcpServer : TcpServerBase<EchoActor>
+    internal class TcpServer(ServerOptions serverOptions) : TcpServerBase<EchoActor>(serverOptions)
     {
-        public TcpServer(ServerOptions serverOptions) : base(serverOptions)
-        {
-        }
         protected override EchoActor CreateSessionActor()
         {
             return new EchoActor();

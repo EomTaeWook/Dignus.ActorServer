@@ -132,29 +132,15 @@ namespace Dignus.Actor.Core.Actors
 
         private void FinalizeKill()
         {
-            VerifyContext();
-
             Interlocked.Exchange(ref _lifecycleState, 2);
 
             while(_mailbox.TryDequeue(out _))
             {
             }
 
-            _actor.Cleanup();
+            _actor.FinalizeKill();
             _actor.OnKill();
             _onFinalize(_actor.SelfActorRef.Id);
-        }
-
-        internal void VerifyContext()
-        {
-            ActorDispatcher actorDispatcher =
-                ActorDispatcher.CurrentActorDispatcher
-                ?? throw new InvalidOperationException($"Actor P-{_dispatcher.Id} is running on ThreadPool.");
-
-            if (actorDispatcher.Id != _dispatcher.Id)
-            {
-                throw new InvalidOperationException($"Actor P-{_dispatcher.Id} vs Current P-{actorDispatcher.Id}");
-            }
         }
     }
 }

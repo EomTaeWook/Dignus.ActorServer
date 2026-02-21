@@ -1,9 +1,9 @@
 ﻿using Dignus.Actor.Core.Messages;
-using Dignus.Actor.Network.Messages;
 using Dignus.Actor.Network.Protocol;
 using Dignus.Collections;
 using Dignus.Sockets;
 using Dignus.Sockets.Interfaces;
+using Multicast.TcpActorServer.Messages;
 
 namespace Multicast.TcpActorServer.Networks.PacketFramer
 {

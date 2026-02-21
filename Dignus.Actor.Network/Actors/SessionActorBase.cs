@@ -15,10 +15,10 @@ namespace Dignus.Actor.Network.Actors
         {
             _networkSessionRef = networkSessionRef;
         }
-        internal override void Cleanup()
+        internal override void FinalizeKill()
         {
-            _networkSessionRef.CloseSession();
-            base.Cleanup();
+            _networkSessionRef.Close();
+            base.FinalizeKill();
         }
     }
 }

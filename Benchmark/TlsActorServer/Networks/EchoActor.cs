@@ -1,8 +1,7 @@
 ﻿using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Core.Messages;
-using Dignus.Actor.Network;
 using Dignus.Actor.Network.Actors;
-using Dignus.Actor.Network.Messages;
+using TlsActorServer.Messages;
 
 namespace TlsActorServer.Networks
 {
@@ -18,7 +17,6 @@ namespace TlsActorServer.Networks
         }
         public override void OnKill() 
         {
-
         }
     }
 }

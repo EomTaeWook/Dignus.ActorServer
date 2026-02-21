@@ -12,10 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Messages\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\Dignus.Actor.Core\Dignus.Actor.Core.csproj" />
     <ProjectReference Include="..\..\Dignus.Actor.Network\Dignus.Actor.Network.csproj" />
   </ItemGroup>

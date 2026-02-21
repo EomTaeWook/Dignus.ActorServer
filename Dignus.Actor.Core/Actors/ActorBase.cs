@@ -4,17 +4,20 @@
 
 using Dignus.Actor.Core.Dispatcher;
 using Dignus.Actor.Core.Messages;
+using System;
 using System.Threading.Tasks;
 
 namespace Dignus.Actor.Core.Actors
 {
     public abstract class ActorBase 
     {
+        protected abstract ValueTask OnReceive(IActorMessage message, IActorRef sender);
+        internal virtual void FinalizeKill() { }
+        public virtual void OnKill() { }
+
         public IActorRef Self => SelfActorRef;
 
         internal ActorRef SelfActorRef { get; private set; }
-
-        protected abstract ValueTask OnReceive(IActorMessage message, IActorRef sender);
 
         internal ActorDispatcher Dispatcher { get; private set; }
 
@@ -22,9 +25,7 @@ namespace Dignus.Actor.Core.Actors
         {
             return OnReceive(message, sender);
         }
-        internal virtual void Cleanup()
-        {
-        }
+
         internal void Bind(ActorDispatcher actorDispatcher, ActorRef actorRef)
         {
             Dispatcher = actorDispatcher;
@@ -35,7 +36,17 @@ namespace Dignus.Actor.Core.Actors
         {
             targetRef.Post(message, Self);
         }
-        
-        public virtual void OnKill() { }
+
+        public void VerifyContext()
+        {
+            ActorDispatcher actorDispatcher =
+                ActorDispatcher.CurrentActorDispatcher
+                ?? throw new InvalidOperationException($"Actor Dispatcher-{Dispatcher.Id} is running on ThreadPool.");
+
+            if (actorDispatcher.Id != Dispatcher.Id)
+            {
+                throw new InvalidOperationException($"Actor Dispatcher-{Dispatcher.Id} vs Current Dispatcher-{actorDispatcher.Id}");
+            }
+        }
     }
 }

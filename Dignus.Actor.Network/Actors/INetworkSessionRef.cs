@@ -8,6 +8,6 @@ namespace Dignus.Actor.Network.Actors
 {
     public interface INetworkSessionRef : IActorRef, INetworkSession
     {
-        void CloseSession();
+        void Close();
     }
 }

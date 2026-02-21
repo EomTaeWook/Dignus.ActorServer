@@ -2,9 +2,10 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 // Part of Dignus.ActorServer
 
+using Dignus.Actor.Network.Messages;
 using System;
 
-namespace Dignus.Actor.Network.Messages
+namespace Multicast.TcpActorServer.Messages
 {
     public class BinaryMessage(ArraySegment<byte> bytes) : INetworkActorMessage
     {

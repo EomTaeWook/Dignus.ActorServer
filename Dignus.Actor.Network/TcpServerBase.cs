@@ -40,9 +40,12 @@ namespace Dignus.Actor.Network
             ArgumentNullException.ThrowIfNull(options.Network);
             ArgumentNullException.ThrowIfNull(options.Network.Decoder);
             ArgumentNullException.ThrowIfNull(options.Network.MessageSerializer);
+
             if(options.Network.MailboxCapacity <=0)
             {
-                throw new ArgumentOutOfRangeException(nameof(options.Network.MailboxCapacity));
+                throw new ArgumentOutOfRangeException(nameof(options),
+                    options.Network.MailboxCapacity,
+                    "options.Network.MailboxCapacity must be greater than 0.");
             }
 
 

@@ -2,7 +2,7 @@
 using Dignus.Actor.Core.Messages;
 using Dignus.Actor.Network;
 using Dignus.Actor.Network.Actors;
-using Dignus.Actor.Network.Messages;
+using TcpActorServer.Messages;
 
 namespace TcpActorServer.Networks
 {

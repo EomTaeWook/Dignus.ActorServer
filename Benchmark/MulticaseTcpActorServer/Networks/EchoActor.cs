@@ -3,6 +3,7 @@ using Dignus.Actor.Core.Messages;
 using Dignus.Actor.Network;
 using Dignus.Actor.Network.Actors;
 using Dignus.Actor.Network.Messages;
+using Multicast.TcpActorServer.Messages;
 
 namespace Multicast.TcpActorServer.Networks
 {
