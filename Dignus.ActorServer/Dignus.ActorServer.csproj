@@ -8,7 +8,7 @@
     <Authors>EomTaeWook</Authors>
     <Nullable>disable</Nullable>
 
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
     <Copyright>© 2021–2026 EomTaeWook. Released under the MIT License.</Copyright>
 
     <IsPackable>true</IsPackable>

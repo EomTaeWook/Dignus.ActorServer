@@ -17,7 +17,7 @@ namespace Dignus.Actor.Core
 
         const int DefaultMailboxCapacity = 1024;
 
-        private readonly ConcurrentDictionary<int, ActorRunner> _actors = new();
+        private readonly ConcurrentDictionary<int, ActorRunner> _actorRunners = new();
         private readonly ConcurrentDictionary<string, int> _aliasToId = new();
         private readonly ActorDispatcher[] _dispatchers;
         private int _nextActorId;
@@ -59,11 +59,11 @@ namespace Dignus.Actor.Core
             var runner = new ActorRunner(actor, dispatcher, mailboxCapacity, FinalizeKill);
 
             ActorRef actorRef = new(this, id, alias);
-            actor.Bind(dispatcher, actorRef);
+            actor.Initialize(dispatcher, actorRef);
 
             try
             {
-                if (_actors.TryAdd(id, runner) == false)
+                if (_actorRunners.TryAdd(id, runner) == false)
                 {
                     throw new InvalidOperationException($"Duplicate actor id.{id}");
                 }
@@ -72,7 +72,7 @@ namespace Dignus.Actor.Core
                 {
                     if (_aliasToId.TryAdd(alias, id) == false)
                     {
-                        _actors.TryRemove(id, out _);
+                        _actorRunners.TryRemove(id, out _);
                         throw new InvalidOperationException($"Duplicate actor alias.{alias}");
                     }
                 }
@@ -87,7 +87,7 @@ namespace Dignus.Actor.Core
         }
         internal void Post(int actorId, in ActorMail actorMail)
         {
-            if (!_actors.TryGetValue(actorId, out var actorRunner))
+            if (!_actorRunners.TryGetValue(actorId, out var actorRunner))
             {
                 PublishDeadLetter(actorMail.Message,
                     actorMail.Sender,
@@ -125,14 +125,14 @@ namespace Dignus.Actor.Core
         }
         internal void Kill(int actorId)
         {
-            if (_actors.TryGetValue(actorId, out var actorRunner) == true)
+            if (_actorRunners.TryGetValue(actorId, out var actorRunner) == true)
             {
                 actorRunner.Kill();
             }
         }
         internal void FinalizeKill(int actorId)
         {
-            if(_actors.TryRemove(actorId, out var actorRunner))
+            if(_actorRunners.TryRemove(actorId, out var actorRunner))
             {
                 var actor = actorRunner.GetActor();
 
@@ -150,7 +150,7 @@ namespace Dignus.Actor.Core
         internal bool TryGetActorRef(int id, out IActorRef actorRef)
         {
             actorRef = null;
-            if (_actors.TryGetValue(id, out var actorRunner))
+            if (_actorRunners.TryGetValue(id, out var actorRunner))
             {
                 actorRef = actorRunner.GetActor().Self;
                 return true;

@@ -11,7 +11,7 @@ namespace Dignus.Actor.Network.Actors
         private INetworkSessionRef _networkSessionRef;
         protected INetworkSession NetworkSession => _networkSessionRef;
 
-        internal void SetNetworkSessionRef(INetworkSessionRef networkSessionRef)
+        internal void Initialize(INetworkSessionRef networkSessionRef)
         {
             _networkSessionRef = networkSessionRef;
         }

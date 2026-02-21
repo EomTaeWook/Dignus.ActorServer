@@ -26,7 +26,7 @@ namespace Dignus.Actor.Core.Actors
             return OnReceive(message, sender);
         }
 
-        internal void Bind(ActorDispatcher actorDispatcher, ActorRef actorRef)
+        internal void Initialize(ActorDispatcher actorDispatcher, ActorRef actorRef)
         {
             Dispatcher = actorDispatcher;
             SelfActorRef = actorRef;
