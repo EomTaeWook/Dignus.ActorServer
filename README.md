@@ -71,13 +71,13 @@ Send pattern: Server broadcasts identical payload to all connected clients
 ### Result
 
 ```
-Total Time: 10.011 seconds
+Total Time: 10.008 seconds
 Total Client: 100
-Total Bytes: 3,947,244,352
-Total Data: 3.68 GiB
-Total Message: 123,351,386
-Data Throughput: 376.03 MiB/s
-Message Throughput: 12,321,589 msg/s
+Total Bytes: 4,909,594,848
+Total Data: 4.57 GiB
+Total Message: 153,424,839
+Data Throughput: 467.83 MiB/s
+Message Throughput: 15,329,728 msg/s
 ```
 
 ---
