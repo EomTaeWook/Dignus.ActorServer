@@ -16,7 +16,7 @@ namespace Multicast.TcpClient
                     [echoSerializer]);
         }
 
-        private static void MulticaseBechmark()
+        private static void MulticastBechmark()
         {
             var clients = new List<ClientModule>();
             LogHelper.Info($"start");
@@ -81,7 +81,7 @@ namespace Multicast.TcpClient
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-            MulticaseBechmark();
+            MulticastBechmark();
 
             Console.ReadLine();
         }

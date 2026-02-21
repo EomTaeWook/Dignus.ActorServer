@@ -1,28 +1,27 @@
 ﻿using Dignus.Log;
 using Dignus.Sockets;
 using Dignus.Sockets.Tls;
+using Multicast.TcpClient;
+using Multicast.TcpClient.Serializer;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using TlsTestClient;
-using TlsTestClient.Serializer;
 
 internal class Program
 {
     private const string ServerName = "DignusActorTlsServer";
     static SessionSetup EchoSetupFactory()
     {
-        EchoPacketProcessor echoPacketProcessor = new();
+        EchoPacketProcessor echoSerializer = new();
 
         return new SessionSetup(
-                echoPacketProcessor,
-                echoPacketProcessor,
-                [echoPacketProcessor]);
+                echoSerializer,
+                echoSerializer,
+                [echoSerializer]);
     }
-
-    private static void RoundTripBechmark()
+    private static void MulticastBechmark()
     {
         var clients = new List<ClientModule>();
         LogHelper.Info($"start");
@@ -32,20 +31,19 @@ internal class Program
         sessionConfiguration.SocketOption.SendBufferSize = 65536;
         sessionConfiguration.SocketOption.MaxPendingSendBytes = int.MaxValue;
 
+        var pfxPath = Path.Combine(AppContext.BaseDirectory, "client.pfx");
+
+        X509Certificate2 clientCert = X509CertificateLoader.LoadPkcs12FromFile(pfxPath, "1234");
+        var tlsOption = new TlsClientOptions("localhost", clientCert);
+
         {
-            var pfxPath = Path.Combine(AppContext.BaseDirectory, "client.pfx");
-
-            X509Certificate2 clientCert = X509CertificateLoader.LoadPkcs12FromFile(pfxPath, "1234");
-
-            var tlsOption = new TlsClientOptions("localhost", clientCert);
-
-
-            for (int i = 0; i < 1; ++i)
+            for (int i = 0; i < 100; ++i)
             {
                 try
                 {
                     var client = new ClientModule(sessionConfiguration, tlsOption);
                     clients.Add(client);
+
                 }
                 catch (Exception ex)
                 {
@@ -53,12 +51,23 @@ internal class Program
                 }
             }
 
-            foreach (var client in clients)
+            for (int i = 0; i < 100; ++i)
             {
-                client.Connect("127.0.0.1", 5000);
-                client.SendMessage(Consts.Message, 1000);
+                try
+                {
+                    clients[i].Connect("127.0.0.1", 5000);
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.Error(ex);
+                }
             }
         }
+
+        LogHelper.Info("client all connected");
+        LogHelper.Info("Press any key to start benchmark...");
+        Console.ReadLine();
+        LogHelper.Info("Multicast Tls benchmark started.");
 
         Monitor.Instance.Start();
         Task.Delay(10000).GetAwaiter().GetResult();
@@ -73,17 +82,14 @@ internal class Program
 
     }
 
-    
-
-    static void Main(string[] args)
+    private static void Main(string[] args)
     {
         LogBuilder.Configuration(LogConfigXmlReader.Load($"{AppContext.BaseDirectory}DignusLog.config"));
         LogBuilder.Build();
 
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-        //EchoTest
-        RoundTripBechmark();
+        MulticastBechmark();
 
         Console.ReadLine();
     }

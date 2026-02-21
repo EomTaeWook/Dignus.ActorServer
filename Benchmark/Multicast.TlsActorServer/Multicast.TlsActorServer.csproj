@@ -3,26 +3,24 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>disable</ImplicitUsings>
-    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Handler\**" />
-    <EmbeddedResource Remove="Handler\**" />
-    <None Remove="Handler\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Dignus.Log" Version="1.0.8" />
-    <PackageReference Include="Dignus.Sockets" Version="1.2.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="client.pfx">
+    <ProjectReference Include="..\..\Dignus.Actor.Core\Dignus.Actor.Core.csproj" />
+    <ProjectReference Include="..\..\Dignus.Actor.Network\Dignus.Actor.Network.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="DignusLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="DignusLog.config">
+    <None Update="server.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

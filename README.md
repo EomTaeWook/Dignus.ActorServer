@@ -15,7 +15,7 @@ High-performance Actor-based network server framework.
 - Memory: 32 GB
 - Architecture: x64
 - Operating System: Windows 64-bit
-- Runtime: .NET 8 (Release x64)
+- Runtime: .NET 10 (Release x64)
 
 ### Round-Trip Benchmark (Plain TCP)
 
@@ -112,6 +112,37 @@ Total Data: 2.31 GiB
 Total Message: 77,571,857
 Data Throughput: 236.68 MiB/s
 Message Throughput: 7,755,636 msg/s
+```
+
+---
+
+### Tls Fan-out Benchmark (100 clients)
+
+Send pattern: Server broadcasts identical payload to all connected clients
+
+<p align="center">
+  <img src="Benchmark/Result/tls-fan-out-100.png" width="600" />
+</p>
+
+### Test Conditions
+
+- Server address: 127.0.0.1
+- Server port: 5000
+- Protocol: TLS over TCP
+- Working clients: 100
+- Message size: 32 bytes
+- Benchmark duration: 10 seconds
+
+### Result
+
+```
+Total Time: 10.052 seconds
+Total Client: 100
+Total Bytes: 4,852,865,632
+Total Data: 4.52 GiB
+Total Message: 151,652,051
+Data Throughput: 460.42 MiB/s
+Message Throughput: 15,087,042 msg/s
 ```
 
 ---
