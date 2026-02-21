@@ -207,7 +207,7 @@ ActorPacketProcessor
 SessionActor
     |
     v
-TransportActor
+NetworkSession
 ```
 
 ---
