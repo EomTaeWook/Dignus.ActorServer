@@ -23,7 +23,7 @@ namespace Dignus.Actor.Network
         where TSessionActor : SessionActorBase
     {
         protected abstract TSessionActor CreateSessionActor();
-        protected abstract void OnAccepted(IActorRef transport);
+        protected abstract void OnAccepted(IActorRef connectedActorRef);
         protected abstract void OnDisconnected(IActorRef connectedActorRef);
         protected abstract void OnDeadLetterMessage(DeadLetterMessage deadLetterMessage);
 
@@ -120,6 +120,7 @@ namespace Dignus.Actor.Network
                                     _actorNetworkOptions.MessageSerializer);
 
             sessionActor.Initialize(networkSessionRef);
+
             _sessionActors[session.Id] = networkSessionRef;
             OnAccepted(sessionActor.Self);
         }
