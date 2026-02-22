@@ -34,26 +34,36 @@ namespace Dignus.Actor.Network
         private readonly ActorPacketProcessor _actorPacketProcessor;
 
         private readonly ActorTcpHost _actorTcpHost;
-        public TcpServerBase(ServerOptions options)
+        private readonly bool isActorSystemOwner;
+        public TcpServerBase(ServerOptions options) : this(null, options)
+        {
+        }
+        public TcpServerBase(ActorSystem actorSystem, ServerOptions options)
         {
             ArgumentNullException.ThrowIfNull(options);
             ArgumentNullException.ThrowIfNull(options.Network);
             ArgumentNullException.ThrowIfNull(options.Network.Decoder);
             ArgumentNullException.ThrowIfNull(options.Network.MessageSerializer);
 
-            if(options.Network.MailboxCapacity <=0)
+            if (options.Network.MailboxCapacity <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(options),
                     options.Network.MailboxCapacity,
                     "options.Network.MailboxCapacity must be greater than 0.");
             }
-
-
             _actorNetworkOptions = options.Network;
 
-            options.ActorSystem ??= new ActorSystemOptions();
+            if(actorSystem != null)
+            {
+                _actorSystem = actorSystem;
+            }
+            else
+            {
+                isActorSystemOwner = true;
+                options.ActorSystem ??= new ActorSystemOptions();
+                _actorSystem = new ActorSystem(options.ActorSystem.DispatcherThreadCount);
+            }
 
-            _actorSystem = new ActorSystem(options.ActorSystem.DispatcherThreadCount);
             _actorSystem.OnDeadLetterDetected += OnDeadLetterDetected;
 
             _actorPacketProcessor = new ActorPacketProcessor(_actorNetworkOptions.Decoder, this);
@@ -61,10 +71,6 @@ namespace Dignus.Actor.Network
             _actorTcpHost = new ActorTcpHost(this,
                 CreateHostConfigurationFactory(options),
                 options.Network.InitialSessionPoolSize);
-        }
-        ~TcpServerBase() 
-        {
-            _actorSystem.OnDeadLetterDetected -= OnDeadLetterDetected;
         }
 
         private void OnDeadLetterDetected(DeadLetterMessage obj)
@@ -147,10 +153,17 @@ namespace Dignus.Actor.Network
             _actorTcpHost.Start(ipEndPoint, backlog);
         }
         public void Close()
-        {
+        {            
             _actorTcpHost.Close();
         }
-
+        public void Dispose()
+        {
+            _actorSystem.OnDeadLetterDetected -= OnDeadLetterDetected;
+            if (isActorSystemOwner)
+            {
+                _actorSystem.Dispose();
+            }
+        }
         public void Broadcast(byte[] bytes)
         {
             foreach(var session in _sessionActors.Values)

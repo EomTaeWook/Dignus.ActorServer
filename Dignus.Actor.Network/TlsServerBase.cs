@@ -38,6 +38,8 @@ namespace Dignus.Actor.Network
 
         private readonly ConcurrentDictionary<int, INetworkSessionRef> _sessionActors = new();
 
+        private readonly bool isActorSystemOwner;
+
         public TlsServerBase(X509Certificate2 serverCertificate,
             IActorMessageSerializer serializer,
             IMessageDecoder decoder) : this(TlsServerOptions.Builder()
@@ -46,8 +48,20 @@ namespace Dignus.Actor.Network
                                             .UseDecoder(decoder).Build())
         {
         }
+        public TlsServerBase(ActorSystem actorSystem,
+            X509Certificate2 serverCertificate,
+            IActorMessageSerializer serializer,
+            IMessageDecoder decoder) : this(actorSystem, TlsServerOptions.Builder()
+                                            .UseCertificate(serverCertificate)
+                                            .UseSerializer(serializer)
+                                            .UseDecoder(decoder).Build())
+        {
+        }
 
-        public TlsServerBase(TlsServerOptions options)
+        public TlsServerBase(TlsServerOptions options) : this(null, options)
+        {
+        }
+        public TlsServerBase(ActorSystem actorSystem, TlsServerOptions options)
         {
             ArgumentNullException.ThrowIfNull(options);
             ArgumentNullException.ThrowIfNull(options.Network);
@@ -64,9 +78,16 @@ namespace Dignus.Actor.Network
 
             _actorNetworkOptions = options.Network;
 
-            options.ActorSystem ??= new ActorSystemOptions();
-
-            _actorSystem = new ActorSystem(options.ActorSystem.DispatcherThreadCount);
+            if (actorSystem != null)
+            {
+                _actorSystem = actorSystem;
+            }
+            else
+            {
+                isActorSystemOwner = true;
+                options.ActorSystem ??= new ActorSystemOptions();
+                _actorSystem = new ActorSystem(options.ActorSystem.DispatcherThreadCount);
+            }
 
             _actorSystem.OnDeadLetterDetected += OnDeadLetterDetected;
 
@@ -76,10 +97,6 @@ namespace Dignus.Actor.Network
                 CreateHostConfigurationFactory(options),
                 options.TlsOptions,
                 options.Network.InitialSessionPoolSize);
-        }
-        ~TlsServerBase()
-        {
-            _actorSystem.OnDeadLetterDetected -= OnDeadLetterDetected;
         }
         private TSessionActor CreateSessionActorFactory()
         {
@@ -115,6 +132,14 @@ namespace Dignus.Actor.Network
         public void Close() 
         {
             _actorTlsHost.Close();
+        }
+        public void Dispose()
+        {
+            _actorSystem.OnDeadLetterDetected -= OnDeadLetterDetected;
+            if (isActorSystemOwner)
+            {
+                _actorSystem.Dispose();
+            }
         }
 
         private SessionConfiguration CreateHostConfigurationFactory(

@@ -13,6 +13,7 @@ namespace Dignus.Actor.Core.Messages
         MailboxFull,
         RecipientInvalidated,
         ActorStopped,
+        ActorSystemDisposed,
     }
     public class DeadLetterMessage(
         IActorMessage originalMessage,

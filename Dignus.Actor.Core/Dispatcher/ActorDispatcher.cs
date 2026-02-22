@@ -98,6 +98,11 @@ namespace Dignus.Actor.Core.Dispatcher
 
         internal void Schedule(IActorSchedulable actorSchedulable)
         {
+            if(_isStopped == true)
+            {
+                return;
+            }
+
             _scheduledActors.Add(actorSchedulable);
             if (Interlocked.CompareExchange(ref _signalPending, 1, 0) == 0)
             {

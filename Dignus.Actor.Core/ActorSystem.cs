@@ -5,6 +5,7 @@
 using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Core.Dispatcher;
 using Dignus.Actor.Core.Messages;
+using Dignus.Collections;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -21,6 +22,7 @@ namespace Dignus.Actor.Core
         private readonly ConcurrentDictionary<string, int> _aliasToId = new();
         private readonly ActorDispatcher[] _dispatchers;
         private int _nextActorId;
+        private int _isDisposed;
         public ActorSystem(int dispatcherThreadCount)
         {
             _dispatchers = new ActorDispatcher[dispatcherThreadCount];
@@ -52,6 +54,11 @@ namespace Dignus.Actor.Core
 
         internal TActor SpawnInternal<TActor>(TActor actor, string alias, int mailboxCapacity) where TActor : ActorBase
         {
+            if (_isDisposed == 1)
+            {
+                throw new ObjectDisposedException(nameof(ActorSystem));
+            }
+
             int id = Interlocked.Increment(ref _nextActorId);
             int dispatcherIndex = id % _dispatchers.Length;
             var dispatcher = _dispatchers[dispatcherIndex];
@@ -87,6 +94,15 @@ namespace Dignus.Actor.Core
         }
         internal void Post(int actorId, in ActorMail actorMail)
         {
+            if (_isDisposed == 1)
+            {
+                PublishDeadLetter(actorMail.Message,
+                        actorMail.Sender,
+                        actorId,
+                        DeadLetterReason.ActorSystemDisposed);
+                return;
+            }
+
             if (!_actorRunners.TryGetValue(actorId, out var actorRunner))
             {
                 PublishDeadLetter(actorMail.Message,
@@ -174,6 +190,30 @@ namespace Dignus.Actor.Core
         internal void PublishDeadLetter(DeadLetterMessage message)
         {
             OnDeadLetterDetected?.Invoke(message);
+        }
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref _isDisposed, 1) == 1)
+            {
+                return;
+            }
+
+            var copy = new ArrayQueue<ActorRunner>(_actorRunners.Values.Count);
+            copy.AddRange(_actorRunners.Values);
+            foreach (var actor in copy)
+            {
+                actor.Kill();
+            }
+
+            while (!_actorRunners.IsEmpty)
+            {
+                Thread.Yield();
+            }
+
+            foreach (var dispatcher in _dispatchers)
+            {
+                dispatcher.Dispose();
+            }
         }
     }
 }
