@@ -12,7 +12,7 @@ namespace TcpActorServer.Networks
         {
             if(message is BinaryMessage rawMessage)
             {
-                NetworkSession.Send(rawMessage);
+                NetworkSession.SendAsync(rawMessage);
             }
         }
         public override void OnKill() 

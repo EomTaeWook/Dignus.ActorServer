@@ -8,8 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dignus.Log" Version="1.0.8" />
-    <PackageReference Include="Dignus.Sockets" Version="1.2.2" />
+    <ProjectReference Include="..\DignusLib\DignusLib.csproj" />
   </ItemGroup>
 
   <ItemGroup>
