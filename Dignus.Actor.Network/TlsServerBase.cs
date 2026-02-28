@@ -36,7 +36,7 @@ namespace Dignus.Actor.Network
         private readonly ActorPacketProcessor _actorPacketProcessor;
         private readonly ActorNetworkOptions _actorNetworkOptions;
 
-        private readonly ConcurrentDictionary<int, INetworkSessionRef> _sessionActors = new();
+        private readonly ConcurrentDictionary<long, INetworkSessionRef> _sessionActors = new();
 
         private readonly bool isActorSystemOwner;
 
@@ -95,8 +95,7 @@ namespace Dignus.Actor.Network
 
             _actorTlsHost = new ActorTlsHost(this,
                 CreateHostConfigurationFactory(options),
-                options.TlsOptions,
-                options.Network.InitialSessionPoolSize);
+                options.TlsOptions);
         }
         private TSessionActor CreateSessionActorFactory()
         {
@@ -165,7 +164,7 @@ namespace Dignus.Actor.Network
         {
         }
 
-        public bool TryGetActorRef(int sessionId, out IActorRef actorRef)
+        public bool TryGetActorRef(long sessionId, out IActorRef actorRef)
         {
             actorRef = null;
             if (_sessionActors.TryGetValue(sessionId, out var session))

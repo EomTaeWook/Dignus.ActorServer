@@ -27,7 +27,7 @@ namespace Dignus.Actor.Network
         protected abstract void OnDisconnected(IActorRef connectedActorRef);
         protected abstract void OnDeadLetterMessage(DeadLetterMessage deadLetterMessage);
 
-        private readonly ConcurrentDictionary<int, INetworkSessionRef> _sessionActors = new();
+        private readonly ConcurrentDictionary<long, INetworkSessionRef> _sessionActors = new();
 
         private readonly ActorNetworkOptions _actorNetworkOptions;
         private readonly ActorSystem _actorSystem;
@@ -70,7 +70,7 @@ namespace Dignus.Actor.Network
 
             _actorTcpHost = new ActorTcpHost(this,
                 CreateHostConfigurationFactory(options),
-                options.Network.InitialSessionPoolSize);
+                options.InitialSessionPoolSize);
         }
 
         private void OnDeadLetterDetected(DeadLetterMessage obj)
@@ -95,7 +95,7 @@ namespace Dignus.Actor.Network
             return new SessionSetup(_actorNetworkOptions.MessageSerializer, _actorPacketProcessor, null);
         }
 
-        public bool TryGetActorRef(int sessionId, out IActorRef actorRef)
+        public bool TryGetActorRef(long sessionId, out IActorRef actorRef)
         {
             actorRef = null;
             if(_sessionActors.TryGetValue(sessionId, out var session))

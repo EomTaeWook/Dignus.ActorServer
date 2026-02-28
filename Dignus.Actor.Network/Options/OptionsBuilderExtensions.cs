@@ -9,7 +9,7 @@ using System;
 
 namespace Dignus.Actor.Network.Options
 {
-    public static class ActorOptionsBuilderExtensions
+    public static class OptionsBuilderExtensions
     {
         public static TBuilder WithDispatcherThreads<TBuilder>(this TBuilder builder, int count)
             where TBuilder : IActorOptionsBuilderBase<IActorServerOptions>
@@ -41,17 +41,6 @@ namespace Dignus.Actor.Network.Options
         {
             ArgumentNullException.ThrowIfNull(socketOption);
             builder.Options.Network.SocketOption = socketOption;
-            return builder;
-        }
-        public static TBuilder WithInitialPoolSize<TBuilder>(this TBuilder builder, int size)
-            where TBuilder : IActorOptionsBuilderBase<IActorServerOptions>
-        {
-            if (size < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(size), "InitialSessionPoolSize must be >= 0");
-            }
-
-            builder.Options.Network.InitialSessionPoolSize = size;
             return builder;
         }
     }

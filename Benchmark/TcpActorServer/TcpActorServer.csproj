@@ -8,11 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dignus.Log" Version="1.0.8" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\..\Dignus.Actor.Core\Dignus.Actor.Core.csproj" />
     <ProjectReference Include="..\..\Dignus.Actor.Network\Dignus.Actor.Network.csproj" />
+    <ProjectReference Include="..\DignusLib\DignusLib.csproj" />
   </ItemGroup>
 
   <ItemGroup>

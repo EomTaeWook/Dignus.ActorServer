@@ -12,10 +12,8 @@ namespace Dignus.Actor.Network.Hosts
 {
     internal class ActorTlsHost(IActorTlsHostHandler handler,
         SessionConfiguration sessionConfiguration,
-        TlsServerOptions tlsServerOptions,
-        int initialSessionPoolSize = 0) : TlsServerBase(sessionConfiguration,
-            tlsServerOptions,
-            initialSessionPoolSize)
+        TlsServerOptions tlsServerOptions) : TlsServerBase(sessionConfiguration,
+            tlsServerOptions)
     {
         protected override void OnAccepted(ISession session)
         {

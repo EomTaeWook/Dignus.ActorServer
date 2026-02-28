@@ -18,8 +18,8 @@ namespace Dignus.Actor.Core
 
         const int DefaultMailboxCapacity = 1024;
 
-        private readonly ConcurrentDictionary<int, ActorRunner> _actorRunners = new();
-        private readonly ConcurrentDictionary<string, int> _aliasToId = new();
+        private readonly ConcurrentDictionary<long, ActorRunner> _actorRunners = new();
+        private readonly ConcurrentDictionary<string, long> _aliasToId = new();
         private readonly ActorDispatcher[] _dispatchers;
         private int _nextActorId;
         private int _isDisposed;
@@ -159,11 +159,11 @@ namespace Dignus.Actor.Core
             }
         }
 
-        bool IActorRefProvider.TryGetActorRef(int id, out IActorRef actorRef)
+        bool IActorRefProvider.TryGetActorRef(long id, out IActorRef actorRef)
         {
             return TryGetActorRef(id, out actorRef);
         }
-        internal bool TryGetActorRef(int id, out IActorRef actorRef)
+        internal bool TryGetActorRef(long id, out IActorRef actorRef)
         {
             actorRef = null;
             if (_actorRunners.TryGetValue(id, out var actorRunner))
@@ -177,7 +177,7 @@ namespace Dignus.Actor.Core
         public bool TryGetActorRef(string alias, out IActorRef actorRef)
         {
             actorRef = null;
-            if (_aliasToId.TryGetValue(alias, out int id))
+            if (_aliasToId.TryGetValue(alias, out long id))
             {
                 return TryGetActorRef(id, out actorRef);
             }
