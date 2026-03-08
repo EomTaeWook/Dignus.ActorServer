@@ -155,8 +155,8 @@ namespace Dignus.Actor.Network
         {
             if (_sessionActors.TryRemove(session.Id, out var sessionRef))
             {
-                sessionRef.Kill();
                 OnDisconnected(sessionRef);
+                sessionRef.Kill();
             }
         }
 
