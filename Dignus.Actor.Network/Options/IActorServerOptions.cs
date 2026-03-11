@@ -2,8 +2,6 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 // Part of Dignus.ActorServer
 
-using Dignus.Sockets.Tls;
-
 namespace Dignus.Actor.Network.Options
 {
     public interface IActorServerOptions

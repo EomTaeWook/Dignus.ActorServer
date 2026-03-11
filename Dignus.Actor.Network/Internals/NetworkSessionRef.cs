@@ -2,7 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 // Part of Dignus.ActorServer
 
-using Dignus.Actor.Core.Actors;
+using Dignus.Actor.Core;
 using Dignus.Actor.Core.Messages;
 using Dignus.Actor.Network.Messages;
 using Dignus.Actor.Network.Serialization;
@@ -10,7 +10,7 @@ using Dignus.Sockets;
 using Dignus.Sockets.Interfaces;
 using System;
 
-namespace Dignus.Actor.Network.Actors
+namespace Dignus.Actor.Network.Internals
 {
     internal class NetworkSessionRef : INetworkSessionRef
     {

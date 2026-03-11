@@ -1,7 +1,4 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using Dignus.Actor.Core.Actors;
-using Dignus.Actor.Network.Actors;
-using Dignus.Actor.Network.Messages;
 using Dignus.Actor.Network.Options;
 using Dignus.Log;
 using Multicast.TcpActorServer;

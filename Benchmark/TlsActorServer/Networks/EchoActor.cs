@@ -1,6 +1,6 @@
-﻿using Dignus.Actor.Core.Actors;
+﻿using Dignus.Actor.Core;
 using Dignus.Actor.Core.Messages;
-using Dignus.Actor.Network.Actors;
+using Dignus.Actor.Network;
 using TlsActorServer.Messages;
 
 namespace TlsActorServer.Networks

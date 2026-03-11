@@ -6,9 +6,6 @@
     <Project Path="Benchmark/TcpActorServer/TcpActorServer.csproj" />
     <Project Path="Benchmark/TlsActorServer/TlsActorServer.csproj" />
   </Folder>
-  <Folder Name="/Publish/">
-    <Project Path="Dignus.ActorServer/Dignus.ActorServer.csproj" />
-  </Folder>
   <Project Path="Dignus.Actor.Core/Dignus.Actor.Core.csproj" />
   <Project Path="Dignus.Actor.Network/Dignus.Actor.Network.csproj" />
 </Solution>

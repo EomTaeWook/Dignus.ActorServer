@@ -3,9 +3,7 @@
 // Part of Dignus.ActorServer
 
 using Dignus.Actor.Core;
-using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Core.Messages;
-using Dignus.Actor.Network.Actors;
 using Dignus.Actor.Network.Hosts;
 using Dignus.Actor.Network.Internals;
 using Dignus.Actor.Network.Options;

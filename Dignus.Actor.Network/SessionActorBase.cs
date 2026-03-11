@@ -2,9 +2,9 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 // Part of Dignus.ActorServer
 
-using Dignus.Actor.Core.Actors;
+using Dignus.Actor.Core;
 
-namespace Dignus.Actor.Network.Actors
+namespace Dignus.Actor.Network
 {
     public abstract class SessionActorBase : ActorBase
     {

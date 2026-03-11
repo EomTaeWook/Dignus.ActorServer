@@ -3,11 +3,12 @@
 // Part of Dignus.ActorServer
 
 using Dignus.Actor.Core.Dispatcher;
+using Dignus.Actor.Core.Internals;
 using Dignus.Actor.Core.Messages;
 using System;
 using System.Threading.Tasks;
 
-namespace Dignus.Actor.Core.Actors
+namespace Dignus.Actor.Core
 {
     public abstract class ActorBase 
     {

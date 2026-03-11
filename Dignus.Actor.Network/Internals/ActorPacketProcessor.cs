@@ -3,7 +3,6 @@
 // Part of Dignus.ActorServer
 
 using Dignus.Actor.Core;
-using Dignus.Actor.Core.Actors;
 using Dignus.Actor.Network.Protocol;
 using Dignus.Collections;
 using Dignus.Sockets.Interfaces;

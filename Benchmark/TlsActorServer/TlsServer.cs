@@ -1,7 +1,6 @@
-﻿using Dignus.Actor.Core.Actors;
+﻿using Dignus.Actor.Core;
 using Dignus.Actor.Core.Messages;
 using Dignus.Actor.Network;
-using Dignus.Actor.Network.Actors;
 using Dignus.Log;
 using Dignus.Sockets.Interfaces;
 using System.Security.Cryptography.X509Certificates;

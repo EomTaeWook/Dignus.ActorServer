@@ -2,8 +2,6 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 // Part of Dignus.ActorServer
 
-using Dignus.Actor.Core.Actors;
-
 namespace Dignus.Actor.Core.Messages
 {
     public readonly struct ActorMail(IActorMessage Message, IActorRef Sender)

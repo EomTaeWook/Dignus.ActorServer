@@ -3,16 +3,15 @@
 // Part of Dignus.ActorServer
 
 using Dignus.Actor.Core.Dispatcher;
-using Dignus.Actor.Core.Internals;
 using Dignus.Actor.Core.Messages;
 using Dignus.Collections;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Dignus.Actor.Core.Actors
+namespace Dignus.Actor.Core.Internals
 {
-    internal sealed class ActorRunner(ActorBase actor,
+    internal class ActorRunner(ActorBase actor,
         ActorDispatcher dispatcher,
         int mailboxCapacity,
         Action<int> onFinalize

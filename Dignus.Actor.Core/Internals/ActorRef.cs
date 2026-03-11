@@ -5,15 +5,8 @@
 using Dignus.Actor.Core.Messages;
 using System;
 
-namespace Dignus.Actor.Core.Actors
+namespace Dignus.Actor.Core.Internals
 {
-    public interface IActorRef
-    {
-        void Post(IActorMessage message, IActorRef sender = null);
-        void Post(in ActorMail actorMail);
-        void Kill();
-    }
-
     internal class ActorRef(ActorSystem actorSystem,
         int id,
         string alias) : IActorRef
