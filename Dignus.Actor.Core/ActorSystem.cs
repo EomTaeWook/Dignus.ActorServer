@@ -45,13 +45,6 @@ namespace Dignus.Actor.Core
         {
             return SpawnInternal(factory(), alias, mailboxCapacity).Self;
         }
-        public IActorRef Spawn<TActor>(Func<TActor> factory, 
-            int mailboxCapacity = DefaultMailboxCapacity
-            ) where TActor : ActorBase
-        {
-            return Spawn(factory, null, mailboxCapacity);
-        }
-
         internal TActor SpawnInternal<TActor>(TActor actor, string alias, int mailboxCapacity) where TActor : ActorBase
         {
             if (_isDisposed == 1)
