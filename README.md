@@ -263,3 +263,181 @@ Kill flow:
 4. Mailbox cleared
 5. Actor removed from ActorSystem
 6. TransportActor disposes underlying session
+
+## Protocol Pipeline Flow
+
+`Dignus.ActorServer` protocol pipeline works in two phases:
+
+1. **Registration phase**
+2. **Runtime execution phase**
+
+---
+
+## 1. Registration phase
+
+At startup, protocol handlers are scanned and bound to the pipeline.
+
+    ActorProtocolPipeline.Register<TProtocol>()
+        ↓
+    Protocol method scan
+        ↓
+    Protocol name binding
+        ↓
+    Body type extraction
+        ↓
+    Middleware registration
+        ↓
+    Compiled protocol invoker build
+
+During registration the framework performs the following steps:
+
+- Protocol handler methods are discovered
+- Protocol names are mapped to handler methods
+- Handler parameter body types are extracted and cached
+- Middleware is registered per handler method
+- Dispatch delegates are compiled for runtime execution
+
+Example registration:
+
+```csharp
+ActorProtocolPipeline<ClientPipelineContext>.Register<CLSProtocol>((method, pipeline) =>
+{
+    var filters = method.GetCustomAttributes<ActionAttribute>();
+    var orderedFilters = filters.OrderBy(r => r.Order).ToList();
+
+    var middleware = new ProtocolActionMiddleware(orderedFilters);
+    pipeline.Use(middleware);
+});
+```
+
+---
+
+## 2. Runtime execution phase
+
+When a TCP packet arrives, the protocol pipeline executes the following flow.
+
+    TCP packet received
+        ↓
+    PacketFramer.Deserialize
+        ↓
+    Protocol number extracted
+        ↓
+    Protocol validation
+        ↓
+    Body type resolved from registered protocol metadata
+        ↓
+    JSON body deserialization
+        ↓
+    Actor message creation
+        ↓
+    Actor mailbox post
+        ↓
+    PlayerActor.OnReceive
+        ↓
+    Pipeline execution
+        ↓
+    Middleware execution
+        ↓
+    Protocol handler invocation
+        ↓
+    Actor state processing
+
+---
+
+## Decode stage (Network layer)
+
+Incoming packets are decoded and transformed into actor messages.
+
+```csharp
+public IActorMessage Deserialize(ReadOnlySpan<byte> packet)
+{
+    int protocol = BitConverter.ToUInt16(packet[..ProtocolSize]);
+
+    if (ActorProtocolPipeline<ClientPipelineContext>.ValidateProtocol(protocol) == false)
+    {
+        LogHelper.Error($"not found protocol : {protocol}");
+        return null;
+    }
+
+    var bodyString = Encoding.UTF8.GetString(packet[ProtocolSize..]);
+
+    var bodyType = ActorProtocolPipeline<ClientPipelineContext>.GetBodyType(protocol);
+
+    var bodyPacketObject = JsonSerializer.Deserialize(bodyString, bodyType);
+
+    async Task lambdaMessage(PlayerActor actor)
+    {
+        var context = new ClientPipelineContext()
+        {
+            Body = bodyPacketObject,
+            Handler = clientPacketHandler,
+            Protocol = protocol,
+            State = actor
+        };
+
+        await ActorProtocolPipeline<ClientPipelineContext>.ExecuteAsync(ref context);
+    }
+
+    return new InBoundLambdaMessage(lambdaMessage);
+}
+```
+
+---
+
+## Actor execution stage
+
+The actor receives the decoded message and executes the protocol pipeline.
+
+```csharp
+protected override async ValueTask OnReceive(IActorMessage message, IActorRef sender)
+{
+    if (message is InBoundLambdaMessage inBoundLambdaMessage)
+    {
+        inBoundLambdaMessage.Invoke(this);
+    }
+}
+```
+
+---
+
+## Final handler execution
+
+The pipeline eventually invokes the protocol handler.
+
+```csharp
+[ProtocolName("Login")]
+public async Task Process(PlayerActor actor, Login packet)
+{
+    var currentState = actor.GetCurrentState();
+    await currentState.HandlePacketAsync(packet);
+}
+```
+
+---
+
+## Execution Summary
+
+    Register
+    → Protocol binding
+    → Body type extraction
+    → Middleware registration
+
+    Receive packet
+    → Decode packet
+    → Resolve BodyType
+    → Deserialize body
+    → Create actor message
+    → Post to actor mailbox
+    → Execute pipeline
+    → Run middleware
+    → Invoke handler
+    → Actor state logic
+
+---
+
+## Key Characteristics
+
+- Packet decoding happens before actor execution
+- Actor logic remains lightweight
+- Middleware executes inside the actor context
+- No shared state across actors
