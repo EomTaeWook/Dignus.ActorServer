@@ -50,9 +50,9 @@
   <ItemGroup>
     <TfmSpecificPackageFile Include="..\Dignus.Actor.Core\bin\$(Configuration)\$(TargetFramework)\Dignus.Actor.Core.dll" PackagePath="lib\$(TargetFramework)\" />
   </ItemGroup>
-  
+
   <Target Name="PostPack" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
-    <Exec Command="xcopy /Y &quot;$(OutputPath)*.nupkg&quot; &quot;$(SolutionDir)publish\nuget\&quot;" />
+    <Exec Command="xcopy /Y &quot;$(OutputPath)$(PackageId).$(Version).nupkg&quot; &quot;$(SolutionDir)publish\nuget\&quot;" />
   </Target>
   
 </Project>
