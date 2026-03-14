@@ -72,7 +72,6 @@ namespace Dignus.Actor.Core.Internals
 
             return EnqueueResult.Success;
         }
-
         public void Kill()
         {
             if(Interlocked.CompareExchange(ref _lifecycleState, 1, 0) == 0)
@@ -83,7 +82,6 @@ namespace Dignus.Actor.Core.Internals
                 }
             }
         }
-
         public void Execute()
         {
             if (Volatile.Read(ref _pendingReceiveTask) != null)
@@ -128,18 +126,15 @@ namespace Dignus.Actor.Core.Internals
                 }
             }
         }
-
         private void FinalizeKill()
         {
             if (Interlocked.Exchange(ref _lifecycleState, 2) == 2)
             {
                 return;
             }
-
             while (_mailbox.TryDequeue(out _))
             {
             }
-
             _actor.KillInternal();
             _onFinalize(_actor.SelfActorRef.Id);
         }

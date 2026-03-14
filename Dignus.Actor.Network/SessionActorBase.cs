@@ -3,6 +3,7 @@
 // Part of Dignus.ActorServer
 
 using Dignus.Actor.Core;
+using System;
 
 namespace Dignus.Actor.Network
 {
@@ -14,11 +15,15 @@ namespace Dignus.Actor.Network
 
         internal void Initialize(INetworkSessionRef networkSessionRef)
         {
+            ArgumentNullException.ThrowIfNull(networkSessionRef);
             _networkSessionRef = networkSessionRef;
         }
         internal override void KillInternal()
         {
-            _networkSessionRef.Close();
+            if(_networkSessionRef != null)
+            {
+                _networkSessionRef.Close();
+            }
             base.KillInternal();
         }
     }
