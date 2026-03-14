@@ -7,9 +7,9 @@ using Dignus.Collections;
 using Dignus.Sockets.Interfaces;
 using System;
 
-namespace Dignus.Actor.Network.Protocol
+namespace Dignus.Actor.Network.Codec
 {
-    public interface IMessageDecoder
+    public interface IActorMessageDecoder
     {
         public IActorMessage Deserialize(ReadOnlySpan<byte> packet);
 

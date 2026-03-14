@@ -3,7 +3,7 @@
 // Part of Dignus.ActorServer
 
 using Dignus.Actor.Core;
-using Dignus.Actor.Network.Protocol;
+using Dignus.Actor.Network.Codec;
 using Dignus.Collections;
 using Dignus.Sockets.Interfaces;
 using Dignus.Sockets.Processing;
@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Dignus.Actor.Network.Internals
 {
-    internal class ActorPacketProcessor(IMessageDecoder decoder,
+    internal class ActorPacketProcessor(IActorMessageDecoder decoder,
         IActorRefProvider actorRefProvider) : PacketProcessor
     {
         protected override Task ProcessPacketAsync(ISession session, ArraySegment<byte> packet)

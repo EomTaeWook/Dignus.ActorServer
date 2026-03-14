@@ -4,11 +4,10 @@
 
 using Dignus.Actor.Core;
 using Dignus.Actor.Core.Messages;
+using Dignus.Actor.Network.Codec;
 using Dignus.Actor.Network.Hosts;
 using Dignus.Actor.Network.Internals;
 using Dignus.Actor.Network.Options;
-using Dignus.Actor.Network.Protocol;
-using Dignus.Actor.Network.Serialization;
 using Dignus.Sockets;
 using Dignus.Sockets.Interfaces;
 using System;
@@ -77,7 +76,7 @@ namespace Dignus.Actor.Network
         }
 
         public TcpServerBase(IActorMessageSerializer serializer,
-            IMessageDecoder decoder) : this(ServerOptions.Builder()
+            IActorMessageDecoder decoder) : this(ServerOptions.Builder()
                                         .UseSerializer(serializer)
                                         .UseDecoder(decoder)
                                         .Build())

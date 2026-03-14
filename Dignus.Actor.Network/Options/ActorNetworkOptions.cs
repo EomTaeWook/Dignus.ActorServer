@@ -2,8 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 // Part of Dignus.ActorServer
 
-using Dignus.Actor.Network.Protocol;
-using Dignus.Actor.Network.Serialization;
+using Dignus.Actor.Network.Codec;
 using Dignus.Sockets;
 
 namespace Dignus.Actor.Network.Options
@@ -11,7 +10,7 @@ namespace Dignus.Actor.Network.Options
     public sealed class ActorNetworkOptions
     {
         public IActorMessageSerializer MessageSerializer { get; set; }
-        public IMessageDecoder Decoder { get; set; }
+        public IActorMessageDecoder Decoder { get; set; }
         public int MailboxCapacity { get; set; } = 1024;
         public SocketOption SocketOption { get; set; }
     }

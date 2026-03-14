@@ -1,5 +1,5 @@
 ﻿using Dignus.Actor.Core.Messages;
-using Dignus.Actor.Network.Protocol;
+using Dignus.Actor.Network.Codec;
 using Dignus.Collections;
 using Dignus.Sockets;
 using Dignus.Sockets.Interfaces;
@@ -7,7 +7,7 @@ using Multicast.TcpActorServer.Messages;
 
 namespace Multicast.TcpActorServer.Networks.PacketFramer
 {
-    internal class MyPacketFramer : IMessageDecoder
+    internal class MyPacketFramer : IActorMessageDecoder
     {
         public IActorMessage Deserialize(ReadOnlySpan<byte> packet)
         {

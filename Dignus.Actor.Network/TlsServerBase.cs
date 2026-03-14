@@ -4,11 +4,10 @@
 
 using Dignus.Actor.Core;
 using Dignus.Actor.Core.Messages;
+using Dignus.Actor.Network.Codec;
 using Dignus.Actor.Network.Hosts;
 using Dignus.Actor.Network.Internals;
 using Dignus.Actor.Network.Options;
-using Dignus.Actor.Network.Protocol;
-using Dignus.Actor.Network.Serialization;
 using Dignus.Sockets;
 using Dignus.Sockets.Interfaces;
 using System;
@@ -40,7 +39,7 @@ namespace Dignus.Actor.Network
 
         public TlsServerBase(X509Certificate2 serverCertificate,
             IActorMessageSerializer serializer,
-            IMessageDecoder decoder) : this(TlsServerOptions.Builder()
+            IActorMessageDecoder decoder) : this(TlsServerOptions.Builder()
                                             .UseCertificate(serverCertificate)
                                             .UseSerializer(serializer)
                                             .UseDecoder(decoder).Build())
@@ -49,7 +48,7 @@ namespace Dignus.Actor.Network
         public TlsServerBase(ActorSystem actorSystem,
             X509Certificate2 serverCertificate,
             IActorMessageSerializer serializer,
-            IMessageDecoder decoder) : this(actorSystem, TlsServerOptions.Builder()
+            IActorMessageDecoder decoder) : this(actorSystem, TlsServerOptions.Builder()
                                             .UseCertificate(serverCertificate)
                                             .UseSerializer(serializer)
                                             .UseDecoder(decoder).Build())

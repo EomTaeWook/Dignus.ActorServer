@@ -2,8 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 // Part of Dignus.ActorServer
 
-using Dignus.Actor.Network.Protocol;
-using Dignus.Actor.Network.Serialization;
+using Dignus.Actor.Network.Codec;
 using Dignus.Sockets;
 using System;
 
@@ -29,7 +28,7 @@ namespace Dignus.Actor.Network.Options
             builder.Options.Network.MessageSerializer = serializer;
             return builder;
         }
-        public static TBuilder UseDecoder<TBuilder>(this TBuilder builder, IMessageDecoder decoder)
+        public static TBuilder UseDecoder<TBuilder>(this TBuilder builder, IActorMessageDecoder decoder)
             where TBuilder : IActorOptionsBuilderBase<IActorServerOptions>
         {
             ArgumentNullException.ThrowIfNull(decoder);

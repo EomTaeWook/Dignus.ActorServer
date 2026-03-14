@@ -1,6 +1,6 @@
 ﻿using Dignus.Actor.Core.Messages;
+using Dignus.Actor.Network.Codec;
 using Dignus.Actor.Network.Messages;
-using Dignus.Actor.Network.Serialization;
 using Dignus.Sockets.Interfaces;
 
 namespace TlsActorServer.Messages
