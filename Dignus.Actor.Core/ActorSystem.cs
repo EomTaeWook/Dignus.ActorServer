@@ -38,18 +38,18 @@ namespace Dignus.Actor.Core
         {
             return SpawnInternal(new TActor(), alias, mailboxCapacity).Self;
         }
-        public IActorRef Spawn<TActor>(Func<string, TActor> factory,
+        public IActorRef Spawn<TActor>(Func<TActor> factory,
             string alias = null,
             int mailboxCapacity = DefaultMailboxCapacity
             ) where TActor : ActorBase
         {
-            return SpawnInternal(factory(alias), alias, mailboxCapacity).Self;
+            return SpawnInternal(factory(), alias, mailboxCapacity).Self;
         }
         public IActorRef Spawn<TActor>(Func<TActor> factory, 
             int mailboxCapacity = DefaultMailboxCapacity
             ) where TActor : ActorBase
         {
-            return SpawnInternal(factory(), null, mailboxCapacity).Self;
+            return Spawn(factory, null, mailboxCapacity);
         }
 
         internal TActor SpawnInternal<TActor>(TActor actor, string alias, int mailboxCapacity) where TActor : ActorBase
