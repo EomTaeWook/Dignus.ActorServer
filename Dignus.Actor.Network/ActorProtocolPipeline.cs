@@ -15,6 +15,7 @@ namespace Dignus.Actor.Network
     public static class ActorProtocolPipeline<TPipelineContext> where TPipelineContext : struct, IPipelineContextBase
     {
         private static Func<int, bool> _validateProtocolDelegate;
+        private static Func<int, Type> _getBodyTypeDelegate;
         public static void Register<TProtocol>(Action<MethodInfo, AsyncPipeline<TPipelineContext>> setupMiddlewareAction)
             where TProtocol : struct, Enum
         {
@@ -64,6 +65,12 @@ namespace Dignus.Actor.Network
                 ?.MakeGenericMethod(handlerType, stateType);
 
             _validateProtocolDelegate = (Func<int, bool>)Delegate.CreateDelegate(typeof(Func<int, bool>), validateMethodInfo);
+
+            var getBodyTypeMethodInfo = typeof(ProtocolStateHandlerMapper)
+                .GetMethod(nameof(ProtocolStateHandlerMapper.GetBodyType), BindingFlags.Public | BindingFlags.Static)
+                ?.MakeGenericMethod(handlerType, stateType);
+
+            _getBodyTypeDelegate = (Func<int, Type>)Delegate.CreateDelegate(typeof(Func<int, Type>), getBodyTypeMethodInfo);
         }
         private static void RegisterInternal<THandler, TBody, TState, TProtocol>(
             Action<MethodInfo, AsyncPipeline<TPipelineContext>> setupMiddlewareAction,
@@ -75,6 +82,15 @@ namespace Dignus.Actor.Network
                 .Bind<THandler, TBody, TProtocol>(protocolInvokerBinder)
                 .Use(setupMiddlewareAction)
                 .Build();
+        }
+
+        public static Type GetBodyType(int protocol)
+        {
+            if (_validateProtocolDelegate == null)
+            {
+                throw new InvalidOperationException("ActorProtocolPipeline is not initialized. call Register first.");
+            }
+            return _getBodyTypeDelegate(protocol);
         }
         public static bool ValidateProtocol(int protocol)
         {

@@ -21,7 +21,14 @@ namespace Dignus.Actor.Network.Internals
             {
                 return Task.CompletedTask;
             }
+
             var message = decoder.Deserialize(packet);
+
+            if(message == null)
+            {
+                return Task.CompletedTask;
+            }
+
             actorRef.Post(message);
 
             return Task.CompletedTask;

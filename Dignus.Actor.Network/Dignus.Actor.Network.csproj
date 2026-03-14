@@ -9,7 +9,7 @@
     <Title>Dignus.ActorServer</Title>
     <AssemblyName>Dignus.ActorServer</AssemblyName>
 
-    <Version>1.1.12</Version>
+    <Version>1.2.0</Version>
     
     <Copyright>© 2021–2026 EomTaeWook. Released under the MIT License.</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -25,7 +25,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dignus.Sockets" Version="1.5.2" />
+    <PackageReference Include="Dignus.Sockets" Version="1.6.0" />
   </ItemGroup>
 
   <ItemGroup>
