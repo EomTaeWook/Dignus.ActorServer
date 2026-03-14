@@ -20,6 +20,8 @@
     
     <RepositoryUrl>https://github.com/EomTaeWook/Dignus.ActorServer</RepositoryUrl>
     <PackageProjectUrl>https://github.com/EomTaeWook/Dignus.ActorServer</PackageProjectUrl>
+    <AssemblyTitle>Dignus.ActorServer</AssemblyTitle>
+    <Description>Actor-based server framework built on top of Dignus and Dignus.Sockets for scalable message-driven network servers.</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dignus.Actor.Core\Dignus.Actor.Core.csproj" PrivateAssets="all"/>
+    <ProjectReference Include="..\Dignus.Actor.Core\Dignus.Actor.Core.csproj" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

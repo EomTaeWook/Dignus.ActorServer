@@ -131,14 +131,16 @@ namespace Dignus.Actor.Core.Internals
 
         private void FinalizeKill()
         {
-            Interlocked.Exchange(ref _lifecycleState, 2);
+            if (Interlocked.Exchange(ref _lifecycleState, 2) == 2)
+            {
+                return;
+            }
 
-            while(_mailbox.TryDequeue(out _))
+            while (_mailbox.TryDequeue(out _))
             {
             }
 
-            _actor.FinalizeKill();
-            _actor.OnKill();
+            _actor.KillInternal();
             _onFinalize(_actor.SelfActorRef.Id);
         }
     }

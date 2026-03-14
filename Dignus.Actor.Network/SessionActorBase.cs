@@ -9,16 +9,17 @@ namespace Dignus.Actor.Network
     public abstract class SessionActorBase : ActorBase
     {
         private INetworkSessionRef _networkSessionRef;
+
         protected INetworkSession NetworkSession => _networkSessionRef;
 
         internal void Initialize(INetworkSessionRef networkSessionRef)
         {
             _networkSessionRef = networkSessionRef;
         }
-        internal override void FinalizeKill()
+        internal override void KillInternal()
         {
             _networkSessionRef.Close();
-            base.FinalizeKill();
+            base.KillInternal();
         }
     }
 }
