@@ -107,20 +107,20 @@ namespace Dignus.Actor.Core
 
             var result = actorRunner.Enqueue(actorMail);
 
-            if (result == Internals.EnqueueResult.Success)
+            if (result == EnqueueResult.Success)
             {
                 return;
             }
 
             switch (result)
             {
-                case Internals.EnqueueResult.MailboxFull:
+                case EnqueueResult.MailboxFull:
                     PublishDeadLetter(actorMail.Message,
                         actorMail.Sender,
                         actorId,
                         DeadLetterReason.MailboxFull);
                     break;
-                case Internals.EnqueueResult.ActorStopped:
+                case EnqueueResult.ActorStopped:
                     PublishDeadLetter(actorMail.Message,
                         actorMail.Sender,
                         actorId,
