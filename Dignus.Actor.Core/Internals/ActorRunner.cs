@@ -21,19 +21,12 @@ namespace Dignus.Actor.Core.Internals
         {
             var runner = (ActorRunner)state;
 
-            try
-            {
-                completedTask.GetAwaiter().GetResult();
-            }
-            catch (Exception)
+            if (completedTask.IsFaulted)
             {
                 runner.Kill();
             }
-            finally
-            {
-                Volatile.Write(ref runner._pendingReceiveTask, null);
-                runner._dispatcher.Schedule(runner);
-            }
+            Volatile.Write(ref runner._pendingReceiveTask, null);
+            runner._dispatcher.Schedule(runner);
         }
         private readonly ActorBase _actor = actor;
         private readonly ActorDispatcher _dispatcher = dispatcher;
@@ -96,17 +89,36 @@ namespace Dignus.Actor.Core.Internals
                     break;
                 }
 
-                var valueTask = _actor.OnReceiveInternal(actorMail.Message,
+                ValueTask valueTask;
+                try
+                {
+                    valueTask = _actor.OnReceiveInternal(actorMail.Message,
                     actorMail.Sender);
+                }
+                catch
+                {
+                    Kill();
+                    break;
+                }
 
                 if (valueTask.IsCompleted)
                 {
+                    if(valueTask.IsFaulted)
+                    {
+                        Kill();
+                        break;
+                    }
+
                     continue;
                 }
 
                 Task receiveTask = valueTask.AsTask();
                 Volatile.Write(ref _pendingReceiveTask, receiveTask);
-                _pendingReceiveTask.ContinueWith(ContinuationAction, this);
+                _pendingReceiveTask.ContinueWith(ContinuationAction,
+                    this,
+                    CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
                 return;
             }
 
