@@ -95,7 +95,11 @@ namespace Dignus.Actor.Core.Internals
                     valueTask = _actor.OnReceiveInternal(actorMail.Message,
                     actorMail.Sender);
                 }
-                catch
+                catch(OperationCanceledException)
+                {
+                    continue;
+                }
+                catch(Exception)
                 {
                     Kill();
                     break;
@@ -114,7 +118,7 @@ namespace Dignus.Actor.Core.Internals
 
                 Task receiveTask = valueTask.AsTask();
                 Volatile.Write(ref _pendingReceiveTask, receiveTask);
-                _pendingReceiveTask.ContinueWith(ContinuationAction,
+                receiveTask.ContinueWith(ContinuationAction,
                     this,
                     CancellationToken.None,
                     TaskContinuationOptions.ExecuteSynchronously,
