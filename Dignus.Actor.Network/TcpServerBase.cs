@@ -108,15 +108,24 @@ namespace Dignus.Actor.Network
             actorRef = null;
             return false;
         }
-        private TSessionActor CreateSessionActorFactory()
-        {
-            return CreateSessionActor();
-        }
+
         void IActorHostHandler.OnAccepted(ISession session)
         {
-            var sessionActor = _actorSystem.SpawnInternal(CreateSessionActorFactory(),
-                null,
-                _actorNetworkOptions.MailboxCapacity);
+            var sessionActor = CreateSessionActor();
+
+            if (sessionActor.DispatcherIndex == null)
+            {
+                sessionActor = _actorSystem.SpawnWithAutoDispatcher(sessionActor,
+                    null,
+                    _actorNetworkOptions.MailboxCapacity);
+            }
+            else
+            {
+                sessionActor = _actorSystem.SpawnWithDispatcher(sessionActor,
+                    sessionActor.DispatcherIndex.Value,
+                    null,
+                    _actorNetworkOptions.MailboxCapacity);
+            }
 
             var networkSessionRef = new NetworkSessionRef(sessionActor.Self,
                                     session,

@@ -18,6 +18,7 @@ namespace Dignus.Actor.Core
         public event Action<DeadLetterMessage> OnDeadLetterDetected;
 
         const int DefaultMailboxCapacity = 1024;
+        public int DispatcherCount => _dispatchers.Length;
 
         private readonly ConcurrentDictionary<long, ActorRunner> _actorRunners = new();
         private readonly ConcurrentDictionary<string, long> _aliasToId = new();
@@ -33,54 +34,86 @@ namespace Dignus.Actor.Core
                 _dispatchers[i].Start();
             }
         }
-        public IActorRef Spawn<TActor>(string alias = null,
-            int mailboxCapacity = DefaultMailboxCapacity
-            ) where TActor : ActorBase, new()
+        public IActorRef SpawnOnDispatcher<TActor>(int dispatcherIndex, string alias = null, int mailboxCapacity = DefaultMailboxCapacity) 
+            where TActor : ActorBase, new()
         {
-            return SpawnInternal(new TActor(), alias, mailboxCapacity).Self;
+            return SpawnWithDispatcher(new TActor(), dispatcherIndex, alias, mailboxCapacity).Self;
         }
-        public IActorRef Spawn<TActor>(Func<TActor> factory,
-            string alias = null,
-            int mailboxCapacity = DefaultMailboxCapacity
-            ) where TActor : ActorBase
+
+        public IActorRef SpawnOnDispatcher<TActor>(Func<TActor> factory, int dispatcherIndex, string alias = null, int mailboxCapacity = DefaultMailboxCapacity) 
+            where TActor : ActorBase
         {
-            return SpawnInternal(factory(), alias, mailboxCapacity).Self;
+            return SpawnWithDispatcher(factory(), dispatcherIndex, alias, mailboxCapacity).Self;
         }
-        internal TActor SpawnInternal<TActor>(TActor actor, string alias, int mailboxCapacity) where TActor : ActorBase
+        internal TActor SpawnWithDispatcher<TActor>(TActor actor, int dispatcherIndex, string alias, int mailboxCapacity) 
+            where TActor : ActorBase
+        {
+            ThrowIfDisposed();
+
+            if ((uint)dispatcherIndex >= (uint)_dispatchers.Length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(dispatcherIndex));
+            }
+
+            int actorId = Interlocked.Increment(ref _nextActorId);
+            ActorDispatcher actorDispatcher = _dispatchers[dispatcherIndex];
+            return RegisterActor(actor, actorId, actorDispatcher, alias, mailboxCapacity);
+        }
+
+        public IActorRef Spawn<TActor>(string alias = null, int mailboxCapacity = DefaultMailboxCapacity) 
+            where TActor : ActorBase, new()
+        {
+            return SpawnWithAutoDispatcher(new TActor(), alias, mailboxCapacity).Self;
+        }
+
+        public IActorRef Spawn<TActor>(Func<TActor> factory, string alias = null, int mailboxCapacity = DefaultMailboxCapacity)
+            where TActor : ActorBase
+        {
+            return SpawnWithAutoDispatcher(factory(), alias, mailboxCapacity).Self;
+        }
+
+        internal TActor SpawnWithAutoDispatcher<TActor>(TActor actor, string alias, int mailboxCapacity) where TActor : ActorBase
+        {
+            ThrowIfDisposed();
+
+            int actorId = Interlocked.Increment(ref _nextActorId);
+            int dispatcherIndex = actorId % _dispatchers.Length;
+            var dispatcher = _dispatchers[dispatcherIndex];
+            return RegisterActor(actor, actorId, dispatcher, alias, mailboxCapacity);
+        }
+        private void ThrowIfDisposed()
         {
             if (_isDisposed == 1)
             {
                 throw new ObjectDisposedException(nameof(ActorSystem));
             }
-
-            int id = Interlocked.Increment(ref _nextActorId);
-            int dispatcherIndex = id % _dispatchers.Length;
-            var dispatcher = _dispatchers[dispatcherIndex];
-
-            var runner = new ActorRunner(actor, dispatcher, mailboxCapacity, this, FinalizeKill);
-
-            ActorRef actorRef = new(this, id, alias);
-            actor.Initialize(dispatcher, actorRef);
+        }
+        private TActor RegisterActor<TActor>(TActor actor, int actorId, ActorDispatcher actorDispatcher, string alias, int mailboxCapacity)
+            where TActor : ActorBase
+        {
+            var actorRunner = new ActorRunner(actor, actorDispatcher, mailboxCapacity, this, FinalizeKill);
+            var actorRef = new ActorRef(this, actorId, alias);
+            actor.Initialize(actorDispatcher, actorRef);
 
             try
             {
-                if (_actorRunners.TryAdd(id, runner) == false)
+                if (_actorRunners.TryAdd(actorId, actorRunner) == false)
                 {
-                    throw new InvalidOperationException($"Duplicate actor id.{id}");
+                    throw new InvalidOperationException($"Duplicate actor id.{actorId}");
                 }
 
                 if (string.IsNullOrEmpty(alias) == false)
                 {
-                    if (_aliasToId.TryAdd(alias, id) == false)
+                    if (_aliasToId.TryAdd(alias, actorId) == false)
                     {
-                        _actorRunners.TryRemove(id, out _);
+                        _actorRunners.TryRemove(actorId, out _);
                         throw new InvalidOperationException($"Duplicate actor alias.{alias}");
                     }
                 }
             }
-            catch(Exception)
+            catch (Exception)
             {
-                runner.Kill();
+                actorRunner.Kill();
                 throw;
             }
 
@@ -163,13 +196,17 @@ namespace Dignus.Actor.Core
             }
             return false;
         }
-        public void Publish(DeadLetterMessage deadLetterMessage)
+        void IDeadLetterPublisher.Publish(DeadLetterMessage deadLetterMessage)
         {
-            OnDeadLetterDetected?.Invoke(deadLetterMessage);
+            PublishDeadLetter(deadLetterMessage);
         }
         internal void PublishDeadLetter(IActorMessage message, IActorRef sender, int recipientActorId, DeadLetterReason reason)
         {
-            Publish(new DeadLetterMessage(message, sender, recipientActorId, reason));
+            PublishDeadLetter(new DeadLetterMessage(message, sender, recipientActorId, reason));
+        }
+        private void PublishDeadLetter(DeadLetterMessage deadLetterMessage)
+        {
+            OnDeadLetterDetected?.Invoke(deadLetterMessage);
         }
         public void Dispose()
         {
