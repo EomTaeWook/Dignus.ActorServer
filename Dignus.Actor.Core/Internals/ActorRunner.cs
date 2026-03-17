@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 // Part of Dignus.ActorServer
 
+using Dignus.Actor.Core.DeadLetter;
 using Dignus.Actor.Core.Dispatcher;
 using Dignus.Actor.Core.Messages;
 using Dignus.Collections;
@@ -14,6 +15,7 @@ namespace Dignus.Actor.Core.Internals
     internal class ActorRunner(ActorBase actor,
         ActorDispatcher dispatcher,
         int mailboxCapacity,
+        IDeadLetterPublisher deadLetterPublisher,
         Action<int> onFinalize
         ) : IActorSchedulable
     {
@@ -23,12 +25,18 @@ namespace Dignus.Actor.Core.Internals
 
             if (completedTask.IsFaulted)
             {
+                if(completedTask.Exception != null)
+                {
+                    runner.PublishExecutionException(completedTask.Exception);
+                }                
                 runner.Kill();
             }
+
             Volatile.Write(ref runner._pendingReceiveTask, null);
             runner._dispatcher.Schedule(runner);
         }
         private readonly ActorBase _actor = actor;
+        private readonly IDeadLetterPublisher _deadLetterPublisher = deadLetterPublisher;
         private readonly ActorDispatcher _dispatcher = dispatcher;
         private readonly Action<int> _onFinalize = onFinalize;
         private readonly MpscBoundedQueue<ActorMail> _mailbox = new(mailboxCapacity);
@@ -99,8 +107,9 @@ namespace Dignus.Actor.Core.Internals
                 {
                     continue;
                 }
-                catch(Exception)
+                catch(Exception ex)
                 {
+                    PublishExecutionException(ex);
                     Kill();
                     break;
                 }
@@ -109,6 +118,11 @@ namespace Dignus.Actor.Core.Internals
                 {
                     if(valueTask.IsFaulted)
                     {
+                        var ex = valueTask.AsTask().Exception;
+                        if (ex != null)
+                        {
+                            PublishExecutionException(ex);
+                        }
                         Kill();
                         break;
                     }
@@ -153,6 +167,14 @@ namespace Dignus.Actor.Core.Internals
             }
             _actor.KillInternal();
             _onFinalize(_actor.SelfActorRef.Id);
+        }
+        private void PublishExecutionException(Exception ex)
+        {
+            _deadLetterPublisher.Publish(new DeadLetterMessage(
+                new ActorExceptionMessage(ex),
+                null,
+                _actor.SelfActorRef.Id,
+                DeadLetterReason.ExecutionException));
         }
     }
 }

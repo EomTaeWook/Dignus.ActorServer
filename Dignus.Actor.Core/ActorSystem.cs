@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 // Part of Dignus.ActorServer
 
+using Dignus.Actor.Core.DeadLetter;
 using Dignus.Actor.Core.Dispatcher;
 using Dignus.Actor.Core.Internals;
 using Dignus.Actor.Core.Messages;
@@ -12,7 +13,7 @@ using System.Threading;
 
 namespace Dignus.Actor.Core
 {
-    public class ActorSystem : IActorRefProvider
+    public class ActorSystem : IActorRefProvider, IDeadLetterPublisher
     {
         public event Action<DeadLetterMessage> OnDeadLetterDetected;
 
@@ -56,7 +57,7 @@ namespace Dignus.Actor.Core
             int dispatcherIndex = id % _dispatchers.Length;
             var dispatcher = _dispatchers[dispatcherIndex];
 
-            var runner = new ActorRunner(actor, dispatcher, mailboxCapacity, FinalizeKill);
+            var runner = new ActorRunner(actor, dispatcher, mailboxCapacity, this, FinalizeKill);
 
             ActorRef actorRef = new(this, id, alias);
             actor.Initialize(dispatcher, actorRef);
@@ -89,42 +90,28 @@ namespace Dignus.Actor.Core
         {
             if (_isDisposed == 1)
             {
-                PublishDeadLetter(actorMail.Message,
-                        actorMail.Sender,
-                        actorId,
-                        DeadLetterReason.ActorSystemDisposed);
+                PublishDeadLetter(actorMail.Message, actorMail.Sender, actorId, DeadLetterReason.ActorSystemDisposed);
                 return;
             }
 
-            if (!_actorRunners.TryGetValue(actorId, out var actorRunner))
+            if (_actorRunners.TryGetValue(actorId, out var actorRunner) == false)
             {
-                PublishDeadLetter(actorMail.Message,
-                    actorMail.Sender,
-                    actorId,
-                    DeadLetterReason.RecipientInvalidated);
+                PublishDeadLetter(actorMail.Message, actorMail.Sender, actorId, DeadLetterReason.RecipientInvalidated);
                 return;
             }
 
             var result = actorRunner.Enqueue(actorMail);
-
             if (result == EnqueueResult.Success)
             {
                 return;
             }
-
             switch (result)
             {
                 case EnqueueResult.MailboxFull:
-                    PublishDeadLetter(actorMail.Message,
-                        actorMail.Sender,
-                        actorId,
-                        DeadLetterReason.MailboxFull);
+                    PublishDeadLetter(actorMail.Message, actorMail.Sender, actorId, DeadLetterReason.MailboxFull);
                     break;
                 case EnqueueResult.ActorStopped:
-                    PublishDeadLetter(actorMail.Message,
-                        actorMail.Sender,
-                        actorId,
-                        DeadLetterReason.ActorStopped);
+                    PublishDeadLetter(actorMail.Message, actorMail.Sender,actorId,DeadLetterReason.ActorStopped);
                     break;
             }
         }
@@ -134,7 +121,7 @@ namespace Dignus.Actor.Core
         }
         internal void Kill(int actorId)
         {
-            if (_actorRunners.TryGetValue(actorId, out var actorRunner) == true)
+            if (_actorRunners.TryGetValue(actorId, out var actorRunner))
             {
                 actorRunner.Kill();
             }
@@ -176,13 +163,13 @@ namespace Dignus.Actor.Core
             }
             return false;
         }
+        public void Publish(DeadLetterMessage deadLetterMessage)
+        {
+            OnDeadLetterDetected?.Invoke(deadLetterMessage);
+        }
         internal void PublishDeadLetter(IActorMessage message, IActorRef sender, int recipientActorId, DeadLetterReason reason)
         {
-            PublishDeadLetter(new DeadLetterMessage(message, sender, recipientActorId, reason));
-        }
-        internal void PublishDeadLetter(DeadLetterMessage message)
-        {
-            OnDeadLetterDetected?.Invoke(message);
+            Publish(new DeadLetterMessage(message, sender, recipientActorId, reason));
         }
         public void Dispose()
         {
