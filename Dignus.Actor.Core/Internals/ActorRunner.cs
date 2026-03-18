@@ -25,11 +25,11 @@ namespace Dignus.Actor.Core.Internals
 
             if (completedTask.IsFaulted)
             {
-                if(completedTask.Exception != null)
+                runner.Kill();
+                if (completedTask.Exception != null)
                 {
                     runner.PublishExecutionException(completedTask.Exception);
-                }                
-                runner.Kill();
+                }
             }
 
             Volatile.Write(ref runner._pendingReceiveTask, null);
@@ -109,8 +109,8 @@ namespace Dignus.Actor.Core.Internals
                 }
                 catch(Exception ex)
                 {
-                    PublishExecutionException(ex);
                     Kill();
+                    PublishExecutionException(ex);
                     break;
                 }
 
@@ -118,12 +118,13 @@ namespace Dignus.Actor.Core.Internals
                 {
                     if(valueTask.IsFaulted)
                     {
+                        Kill();
+
                         var ex = valueTask.AsTask().Exception;
                         if (ex != null)
                         {
                             PublishExecutionException(ex);
                         }
-                        Kill();
                         break;
                     }
 

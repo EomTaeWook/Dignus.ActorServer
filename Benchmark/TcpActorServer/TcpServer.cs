@@ -23,6 +23,10 @@ namespace TcpActorServer
         {
             return new EchoActor();
         }
+        protected override int GetRequestedDispatcherIndex()
+        {
+            return 1;
+        }
 
         protected override void OnAccepted(IActorRef connectedActorRef)
         {
