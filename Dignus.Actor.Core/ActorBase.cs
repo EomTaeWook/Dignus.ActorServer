@@ -18,12 +18,10 @@ namespace Dignus.Actor.Core
         {
             OnKill();
         }
-
         public IActorRef Self => SelfActorRef;
 
-        internal ActorRef SelfActorRef { get; private set; }
-
         internal ActorDispatcher Dispatcher { get; private set; }
+        internal ActorRef SelfActorRef { get; private set; }
 
         internal ValueTask OnReceiveInternal(IActorMessage message, IActorRef sender)
         {

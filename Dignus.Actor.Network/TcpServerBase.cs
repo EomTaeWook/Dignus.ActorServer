@@ -23,6 +23,10 @@ namespace Dignus.Actor.Network
         protected abstract void OnAccepted(IActorRef connectedActorRef);
         protected abstract void OnDisconnected(IActorRef connectedActorRef);
         protected abstract void OnDeadLetterMessage(DeadLetterMessage deadLetterMessage);
+        protected virtual int GetRequestedDispatcherIndex()
+        {
+            return -1;
+        }
 
         private readonly ConcurrentDictionary<long, INetworkSessionRef> _sessionActors = new();
 
@@ -113,7 +117,9 @@ namespace Dignus.Actor.Network
         {
             var sessionActor = CreateSessionActor();
 
-            if (sessionActor.DispatcherIndex == null)
+            var dispatcherIndex = GetRequestedDispatcherIndex();
+
+            if (dispatcherIndex < 0)
             {
                 sessionActor = _actorSystem.SpawnWithAutoDispatcher(sessionActor,
                     null,
@@ -122,7 +128,7 @@ namespace Dignus.Actor.Network
             else
             {
                 sessionActor = _actorSystem.SpawnWithDispatcher(sessionActor,
-                    sessionActor.DispatcherIndex.Value,
+                    dispatcherIndex,
                     null,
                     _actorNetworkOptions.MailboxCapacity);
             }
