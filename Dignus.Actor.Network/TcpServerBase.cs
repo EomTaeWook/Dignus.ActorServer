@@ -140,7 +140,7 @@ namespace Dignus.Actor.Network
             sessionActor.Initialize(networkSessionRef);
 
             _sessionActors[session.Id] = networkSessionRef;
-            OnAccepted(sessionActor.Self);
+            OnAccepted(networkSessionRef);
         }
 
         void IActorHostHandler.OnDisconnected(ISession session)
