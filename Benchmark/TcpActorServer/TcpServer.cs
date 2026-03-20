@@ -30,7 +30,7 @@ namespace TcpActorServer
 
         protected override void OnAccepted(INetworkSessionRef connectedActorRef)
         {
-            LogHelper.Info($"OnAccepted : {connectedActorRef}");
+            LogHelper.Info($"OnAccepted : {connectedActorRef.GetHashCode()}");
         }
 
         protected override void OnDeadLetterMessage(DeadLetterMessage deadLetterMessage)
@@ -40,7 +40,7 @@ namespace TcpActorServer
 
         protected override void OnDisconnected(INetworkSessionRef connectedActorRef)
         {
-            LogHelper.Info($"OnDisconnected : {connectedActorRef}");
+            LogHelper.Info($"OnDisconnected : {connectedActorRef.GetHashCode()}");
         }
      }
 }
