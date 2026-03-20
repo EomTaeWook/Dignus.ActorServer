@@ -3,26 +3,26 @@
 // Part of Dignus.ActorServer
 
 using Dignus.Actor.Core;
+using Dignus.Actor.Network.Internals;
 using System;
 
 namespace Dignus.Actor.Network
 {
-    public abstract class SessionActorBase : ActorBase
+    public abstract class SessionActorBase: ActorBase
     {
-        private INetworkSessionRef _networkSessionRef;
+        internal NetworkSessionRef NetworkSessionRef { get; private set; }
+        protected INetworkSession NetworkSession => NetworkSessionRef;
 
-        protected INetworkSession NetworkSession => _networkSessionRef;
-
-        internal void Initialize(INetworkSessionRef networkSessionRef)
+        internal void Initialize(NetworkSessionRef networkSessionRef)
         {
             ArgumentNullException.ThrowIfNull(networkSessionRef);
-            _networkSessionRef = networkSessionRef;
+            NetworkSessionRef = networkSessionRef;
         }
         internal override void KillInternal()
         {
-            if (_networkSessionRef != null)
+            if(NetworkSessionRef != null)
             {
-                _networkSessionRef.Close();
+                NetworkSessionRef.Close();
             }
             base.KillInternal();
         }

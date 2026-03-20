@@ -7,9 +7,7 @@ using System;
 
 namespace Dignus.Actor.Core.Internals
 {
-    internal class ActorRef(ActorSystem actorSystem,
-        int id,
-        string alias) : IActorRef
+    internal class ActorRef(ActorSystem actorSystem, int id, string alias) : IActorRef
     {
         public int Id { get => id; }
         public string Alias { get => alias; }

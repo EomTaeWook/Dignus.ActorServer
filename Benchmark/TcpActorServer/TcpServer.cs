@@ -28,7 +28,7 @@ namespace TcpActorServer
             return 1;
         }
 
-        protected override void OnAccepted(IActorRef connectedActorRef)
+        protected override void OnAccepted(INetworkSessionRef connectedActorRef)
         {
             LogHelper.Info($"OnAccepted : {connectedActorRef}");
         }
@@ -38,7 +38,7 @@ namespace TcpActorServer
             LogHelper.Error($"OnDeadLetterMessage : {deadLetterMessage}");
         }
 
-        protected override void OnDisconnected(IActorRef connectedActorRef)
+        protected override void OnDisconnected(INetworkSessionRef connectedActorRef)
         {
             LogHelper.Info($"OnDisconnected : {connectedActorRef}");
         }

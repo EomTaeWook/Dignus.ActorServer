@@ -3,6 +3,7 @@
 // Part of Dignus.ActorServer
 
 using Dignus.Actor.Core;
+using Dignus.Actor.Core.Internals;
 using Dignus.Actor.Core.Messages;
 using Dignus.Actor.Network.Codec;
 using Dignus.Actor.Network.Messages;
@@ -14,11 +15,13 @@ namespace Dignus.Actor.Network.Internals
 {
     internal class NetworkSessionRef : INetworkSessionRef
     {
-        private readonly IActorRef _sessionActorRef;
+        public IActorRef SessionActorRef => _sessionActorRef;
+
+        private readonly ActorRef _sessionActorRef;
         private readonly ISession _session;
         private readonly IActorMessageSerializer _serializer;
 
-        public NetworkSessionRef(IActorRef sessionActorRef,
+        public NetworkSessionRef(ActorRef sessionActorRef,
             ISession session,
             IActorMessageSerializer serializer)
         {
@@ -32,14 +35,13 @@ namespace Dignus.Actor.Network.Internals
         }
         public void Kill()
         {
+            Close();
             _sessionActorRef.Kill();
         }
-
         public void Close()
         {
             _session.Dispose();
         }
-
         public void Post(IActorMessage message, IActorRef sender = null)
         {
             _sessionActorRef.Post(message, sender);

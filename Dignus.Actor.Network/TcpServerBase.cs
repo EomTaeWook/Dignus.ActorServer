@@ -20,15 +20,15 @@ namespace Dignus.Actor.Network
         where TSessionActor : SessionActorBase
     {
         protected abstract TSessionActor CreateSessionActor();
-        protected abstract void OnAccepted(IActorRef connectedActorRef);
-        protected abstract void OnDisconnected(IActorRef connectedActorRef);
+        protected abstract void OnAccepted(INetworkSessionRef connectedActorRef);
+        protected abstract void OnDisconnected(INetworkSessionRef disconnectedSessionRef);
         protected abstract void OnDeadLetterMessage(DeadLetterMessage deadLetterMessage);
         protected virtual int GetRequestedDispatcherIndex()
         {
             return -1;
         }
 
-        private readonly ConcurrentDictionary<long, INetworkSessionRef> _sessionActors = new();
+        private readonly ConcurrentDictionary<long, TSessionActor> _sessionActors = new();
 
         private readonly ActorNetworkOptions _actorNetworkOptions;
         private readonly ActorSystem _actorSystem;
@@ -99,9 +99,9 @@ namespace Dignus.Actor.Network
         public bool TryGetActorRef(long sessionId, out IActorRef actorRef)
         {
             actorRef = null;
-            if(_sessionActors.TryGetValue(sessionId, out var session))
+            if(_sessionActors.TryGetValue(sessionId, out var sessionActor))
             {
-                actorRef = session;
+                actorRef = sessionActor.Self;
                 return true;
             }
             return false;
@@ -132,23 +132,26 @@ namespace Dignus.Actor.Network
                     null,
                     _actorNetworkOptions.MailboxCapacity);
             }
+            _sessionActors[session.Id] = sessionActor;
 
-            var networkSessionRef = new NetworkSessionRef(sessionActor.Self,
+            var networkSessionRef = new NetworkSessionRef(sessionActor.SelfActorRef,
                                     session,
                                     _actorNetworkOptions.MessageSerializer);
 
             sessionActor.Initialize(networkSessionRef);
 
-            _sessionActors[session.Id] = networkSessionRef;
             OnAccepted(networkSessionRef);
         }
 
         void IActorHostHandler.OnDisconnected(ISession session)
         {
-            if (_sessionActors.TryRemove(session.Id, out var sessionRef))
+            if (_sessionActors.TryRemove(session.Id, out var sessionActor))
             {
-                OnDisconnected(sessionRef);
-                sessionRef.Kill();
+                if(sessionActor.NetworkSessionRef != null)
+                {
+                    OnDisconnected(sessionActor.NetworkSessionRef);
+                }
+                sessionActor.SelfActorRef.Kill();
             }
         }
 
@@ -180,7 +183,7 @@ namespace Dignus.Actor.Network
         {
             foreach(var session in _sessionActors.Values)
             {
-                session.SendAsync(bytes);
+                session.NetworkSessionRef.SendAsync(bytes);
             }
         }
     }

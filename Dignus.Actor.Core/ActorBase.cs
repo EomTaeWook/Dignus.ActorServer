@@ -13,7 +13,10 @@ namespace Dignus.Actor.Core
     public abstract class ActorBase 
     {
         protected abstract ValueTask OnReceive(IActorMessage message, IActorRef sender);
-        public virtual void OnKill() { }
+        public virtual void OnKill()
+        {
+        }
+
         internal virtual void KillInternal()
         {
             OnKill();

@@ -15,7 +15,7 @@ namespace Multicast.TlsActorServer
             return new EchoActor();
         }
 
-        protected override void OnAccepted(IActorRef connectedActorRef)
+        protected override void OnAccepted(INetworkSessionRef connectedSessionRef)
         {
             //LogHelper.Info($"OnAccepted : {connectedActorRef}");
         }
@@ -25,9 +25,9 @@ namespace Multicast.TlsActorServer
             LogHelper.Info($"OnDeadLetterMessage : {deadLetterMessage}");
         }
 
-        protected override void OnDisconnected(IActorRef connectedActorRef)
+        protected override void OnDisconnected(INetworkSessionRef disconnectedSessionRef)
         {
-            LogHelper.Info($"OnDisconnected : {connectedActorRef}");
+            LogHelper.Info($"OnDisconnected : {disconnectedSessionRef}");
         }
 
         protected override void OnHandshakeFailed(ISession session, Exception ex)

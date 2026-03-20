@@ -17,7 +17,7 @@ namespace Dignus.Actor.Network.Internals
     {
         protected override Task ProcessPacketAsync(ISession session, ArraySegment<byte> packet)
         {
-            if (!actorRefProvider.TryGetActorRef(session.Id, out IActorRef actorRef))
+            if (actorRefProvider.TryGetActorRef(session.Id, out IActorRef actorRef) == false)
             {
                 return Task.CompletedTask;
             }
