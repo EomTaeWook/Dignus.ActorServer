@@ -4,13 +4,36 @@
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <Authors>EomTaeWook</Authors>
     <Nullable>disable</Nullable>
-    <Title>Dignus.Actor.Core</Title>
+
+    <PackageId>$(AssemblyName)</PackageId>
+    <Title>$(AssemblyName)</Title>
+    <Version>1.0.0</Version>
+
+    <Copyright>© 2026 EomTaeWook. Released under the MIT License.</Copyright>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageIcon>Icon.jpg</PackageIcon>
+    <PackageReadmeFile>Dignus.Actor.Core.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+
+    <RepositoryUrl>https://github.com/EomTaeWook/Dignus.ActorServer</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/EomTaeWook/Dignus.ActorServer</PackageProjectUrl>
+    <Description>Core runtime and primitives for building actor-based systems with Dignus ActorSystem.</Description>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Dignus" Version="1.1.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\LICENSE" Pack="true" PackagePath="/" />
+    <None Include="..\publish\Icon.jpg" Pack="true" PackagePath="/" />
+    <None Include="..\publish\Dignus.Actor.Core.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+  <Target Name="PostPack" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
+    <Exec Command="xcopy /Y &quot;$(OutputPath)$(PackageId).$(Version).nupkg&quot; &quot;$(SolutionDir)publish\nuget\&quot;" />
+  </Target>
+  
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <!-- We use the value of AssemblyName to declare the value of the attribute -->

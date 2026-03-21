@@ -8,47 +8,33 @@
     <PackageId>Dignus.ActorServer</PackageId>
     <Title>Dignus.ActorServer</Title>
     <AssemblyName>Dignus.ActorServer</AssemblyName>
-
-    <Version>2.0.1</Version>
+    <AssemblyTitle>Dignus.ActorServer</AssemblyTitle>
     
-    <Copyright>© 2021–2026 EomTaeWook. Released under the MIT License.</Copyright>
+    <Version>2.0.1</Version>
+
+    <Copyright>© 2026 EomTaeWook. Released under the MIT License.</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IsPackable>true</IsPackable>
     <PackageIcon>Icon.jpg</PackageIcon>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReadmeFile>Dignus.Actor.Network.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    
+
     <RepositoryUrl>https://github.com/EomTaeWook/Dignus.ActorServer</RepositoryUrl>
     <PackageProjectUrl>https://github.com/EomTaeWook/Dignus.ActorServer</PackageProjectUrl>
-    <AssemblyTitle>Dignus.ActorServer</AssemblyTitle>
     <Description>Actor-based server framework built on top of Dignus and Dignus.Sockets for scalable message-driven network servers.</Description>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Dignus.Sockets" Version="1.6.1" />
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\Dignus.Actor.Core\Dignus.Actor.Core.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\Dignus.Actor.Core\Dignus.Actor.Core.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-    <None Include="..\publish\Icon.jpg">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-    <None Include="..\README.md">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <TfmSpecificPackageFile Include="..\Dignus.Actor.Core\bin\$(Configuration)\$(TargetFramework)\Dignus.Actor.Core.dll" PackagePath="lib\$(TargetFramework)\" />
+    <None Include="..\LICENSE" Pack="true" PackagePath="/" />
+    <None Include="..\publish\Icon.jpg" Pack="true" PackagePath="/" />
+    <None Include="..\publish\Dignus.Actor.Network.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 
   <Target Name="PostPack" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">

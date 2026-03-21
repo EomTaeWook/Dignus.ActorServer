@@ -7,6 +7,7 @@ using Dignus.Actor.Core.Dispatcher;
 using Dignus.Actor.Core.Internals;
 using Dignus.Actor.Core.Messages;
 using Dignus.Collections;
+using Dignus.DependencyInjection.Attributes;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -25,6 +26,11 @@ namespace Dignus.Actor.Core
         private readonly ActorDispatcher[] _dispatchers;
         private int _nextActorId;
         private int _isDisposed;
+
+        [InjectConstructor]
+        public ActorSystem() :this(Environment.ProcessorCount)
+        {
+        }
         public ActorSystem(int dispatcherThreadCount)
         {
             _dispatchers = new ActorDispatcher[dispatcherThreadCount];
