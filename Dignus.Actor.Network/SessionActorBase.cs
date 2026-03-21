@@ -10,19 +10,19 @@ namespace Dignus.Actor.Network
 {
     public abstract class SessionActorBase: ActorBase
     {
-        internal NetworkSessionRef NetworkSessionRef { get; private set; }
-        protected INetworkSession NetworkSession => NetworkSessionRef;
+        private NetworkSessionRef _networkSessionRef;
+        internal protected INetworkSessionRef NetworkSession => _networkSessionRef;
 
         internal void Initialize(NetworkSessionRef networkSessionRef)
         {
             ArgumentNullException.ThrowIfNull(networkSessionRef);
-            NetworkSessionRef = networkSessionRef;
+            _networkSessionRef = networkSessionRef;
         }
         internal override void KillInternal()
         {
-            if(NetworkSessionRef != null)
+            if(_networkSessionRef != null)
             {
-                NetworkSessionRef.Close();
+                _networkSessionRef.Close();
             }
             base.KillInternal();
         }

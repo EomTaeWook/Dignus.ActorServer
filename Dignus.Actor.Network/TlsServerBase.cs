@@ -166,9 +166,9 @@ namespace Dignus.Actor.Network
         {
             if (_sessionActors.TryRemove(session.Id, out var sessionActor))
             {
-                if(sessionActor.NetworkSessionRef != null)
+                if(sessionActor.NetworkSession != null)
                 {
-                    OnDisconnected(sessionActor.NetworkSessionRef);
+                    OnDisconnected(sessionActor.NetworkSession);
                 }
                 sessionActor.SelfActorRef.Kill();
             }
@@ -205,7 +205,7 @@ namespace Dignus.Actor.Network
         {
             foreach (var session in _sessionActors.Values)
             {
-                session.NetworkSessionRef.SendAsync(bytes);
+                session.NetworkSession.SendAsync(bytes);
             }
         }
     }
