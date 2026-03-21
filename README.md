@@ -63,6 +63,14 @@ Includes:
 
 ---
 
+## Performance
+
+Network performance benchmarks are documented separately:
+
+- [Dignus.Actor.Network Benchmark](publish/Dignus.Actor.Network.md)
+
+---
+
 ## Design Goals
 
 - Single-threaded execution per actor

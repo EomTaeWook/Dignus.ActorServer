@@ -1,21 +1,28 @@
 # Dignus.Actor.Core
 
+[![NuGet](https://img.shields.io/nuget/v/Dignus.ActorServer.svg)](https://www.nuget.org/packages/Dignus.Actor.Core/)
+
 Core actor runtime and messaging primitives for Dignus.
 
 ---
 
 ## Overview
 
-`Dignus.Actor.Core` provides the foundational runtime for building actor-based systems.
+`Dignus.Actor.Core` provides the fundamental runtime for actor-based execution.
 
-This package contains the core components required to run actors and process messages, including:
+It implements a message-driven concurrency model where actors process messages sequentially on dedicated dispatcher threads.
 
-- Actor execution model
-- Message passing infrastructure
-- Actor lifecycle management
-- Dispatcher-based scheduling
+This package focuses purely on execution, messaging, and scheduling.
 
-It does **not** include any networking or transport features.
+---
+
+## Scope
+
+`Dignus.Actor.Core` includes only the actor runtime.
+
+Networking and server features are provided by:
+
+- `Dignus.ActorServer`
 
 ---
 
@@ -40,11 +47,15 @@ Responsible for:
 - Assigning actors to dispatchers
 - Controlling actor lifecycle
 
-Actors are distributed across dispatchers:
+Actors are assigned to dispatchers using a deterministic strategy.
+
+By default, a modulo-based distribution can be used:
 
 ```text
 dispatcherIndex = actorId % dispatcherCount
 ```
+
+Actors can also be assigned to a specific dispatcher directly if needed.
 
 ---
 
@@ -96,36 +107,6 @@ Execution unit of the actor system.
 - Communication only through messages
 
 This keeps actor logic simple and predictable.
-
----
-
-## What This Package Includes
-
-- Actor runtime
-- Message system (`IActorMessage`)
-- Actor references (`IActorRef`)
-- Dispatcher scheduling
-- Actor lifecycle management
-
----
-
-## What This Package Does NOT Include
-
-- TCP / TLS networking
-- Session handling
-- Packet encoding/decoding
-- Protocol pipelines
-
-For networking support, use:
-
-- `Dignus.ActorServer`
-
----
-
-## Package Structure
-
-- `Dignus.Actor.Core` → Core actor runtime
-- `Dignus.ActorServer` → Network and server integration
 
 ---
 
