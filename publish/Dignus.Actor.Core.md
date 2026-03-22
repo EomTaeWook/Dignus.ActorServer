@@ -1,6 +1,6 @@
 # Dignus.Actor.Core
 
-[![NuGet](https://img.shields.io/nuget/v/Dignus.ActorServer.svg)](https://www.nuget.org/packages/Dignus.Actor.Core/)
+[![NuGet](https://img.shields.io/nuget/v/Dignus.Actor.Core.svg)](https://www.nuget.org/packages/Dignus.Actor.Core/)
 
 Core actor runtime and messaging primitives for Dignus.
 

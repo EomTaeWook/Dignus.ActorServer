@@ -6,8 +6,9 @@ High-performance actor-based runtime and network server framework built on top o
 
 ## Overview
 
-Dignus Actor Framework is composed of two main packages:
+Dignus Actor Framework is composed of three packages:
 
+- `Dignus.Actor.Abstractions` → Minimal shared contracts (`IActorMessage`)
 - `Dignus.Actor.Core` → Actor runtime and messaging primitives
 - `Dignus.ActorServer` → Network transport and server integration
 
@@ -23,11 +24,25 @@ Application
 Dignus.ActorServer (Network / Protocol / Session)
    ↓
 Dignus.Actor.Core (Actor runtime / Dispatcher / Messaging)
+   ↓
+Dignus.Actor.Abstractions (Shared contracts)
 ```
 
 ---
 
 ## Packages
+
+### Dignus.Actor.Abstractions
+
+Minimal shared contracts.
+
+Includes:
+
+- IActorMessage
+
+This package allows protocol and model libraries to integrate with the actor system without referencing the full runtime.
+
+---
 
 ### Dignus.Actor.Core
 
@@ -36,8 +51,8 @@ Core actor runtime.
 Includes:
 
 - Actor execution model
-- Message system (`IActorMessage`)
-- Actor references (`IActorRef`)
+- Message system (IActorMessage)
+- Actor references (IActorRef)
 - Dispatcher scheduling
 - Actor lifecycle management
 

@@ -1,4 +1,4 @@
-﻿using Dignus.Actor.Core.Messages;
+﻿using Dignus.Actor.Abstractions;
 using Dignus.Actor.Network.Codec;
 using Dignus.Actor.Network.Messages;
 using Dignus.Sockets.Interfaces;

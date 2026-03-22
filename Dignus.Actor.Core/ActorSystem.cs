@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 // Part of Dignus.ActorServer
 
+using Dignus.Actor.Abstractions;
 using Dignus.Actor.Core.DeadLetter;
 using Dignus.Actor.Core.Dispatcher;
 using Dignus.Actor.Core.Internals;
