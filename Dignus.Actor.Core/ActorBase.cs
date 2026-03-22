@@ -44,10 +44,12 @@ namespace Dignus.Actor.Core
 
         public void VerifyContext()
         {
-            ActorDispatcher actorDispatcher =
-                ActorDispatcher.CurrentActorDispatcher
-                ?? throw new InvalidOperationException($"Actor Dispatcher-{Dispatcher.Id} is running on ThreadPool.");
+            ActorDispatcher actorDispatcher = ActorDispatcher.CurrentActorDispatcher;
 
+            if(actorDispatcher == null)
+            {
+                throw new InvalidOperationException($"Actor is running outside its dispatcher context. Expected Dispatcher-{Dispatcher.Id}");
+            }
             if (actorDispatcher.Id != Dispatcher.Id)
             {
                 throw new InvalidOperationException($"Actor Dispatcher-{Dispatcher.Id} vs Current Dispatcher-{actorDispatcher.Id}");
