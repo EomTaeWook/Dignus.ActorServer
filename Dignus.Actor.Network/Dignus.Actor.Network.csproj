@@ -10,7 +10,7 @@
     <AssemblyName>Dignus.ActorServer</AssemblyName>
     <AssemblyTitle>Dignus.ActorServer</AssemblyTitle>
     
-    <Version>3.0.0-preview.1</Version>
+    <Version>3.0.0-preview.2</Version>
 
     <Copyright>© 2026 EomTaeWook. Released under the MIT License.</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -25,10 +25,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dignus.Sockets" Version="1.6.1" />
+    <PackageReference Include="Dignus.Sockets" Version="2.0.0-preview.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Dignus.Actor.Core\Dignus.Actor.Core.csproj"/>
+    <ProjectReference Include="..\Dignus.Actor.Core\Dignus.Actor.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
