@@ -1,5 +1,8 @@
 # Dignus Actor Framework
 
+[![NuGet](https://img.shields.io/nuget/v/Dignus.Actor.Core.svg)](https://www.nuget.org/packages/Dignus.Actor.Core)
+[![NuGet](https://img.shields.io/nuget/v/Dignus.ActorServer.svg)](https://www.nuget.org/packages/Dignus.ActorServer)
+
 High-performance actor-based runtime and network server framework built on top of Dignus.
 
 ---

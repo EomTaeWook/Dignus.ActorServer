@@ -24,7 +24,7 @@ This benchmark measures full round-trip throughput:
 Client send -> Server-side processing -> Response return
 
 <p align="center">
-  <img src="Benchmark/Result/tcp-round-trip.png" width="600" />
+  <img src="../Benchmark/Result/tcp-round-trip.png" width="600" />
 </p>
 
 ### Test Conditions
@@ -56,7 +56,7 @@ Message Throughput: 10,208,278 msg/s
 Send pattern: Server broadcasts identical payload to all connected clients
 
 <p align="center">
-  <img src="Benchmark/Result/tcp-fan-out-100.png" width="600" />
+  <img src="../Benchmark/Result/tcp-fan-out-100.png" width="600" />
 </p>
 
 ### Test Conditions
@@ -89,7 +89,7 @@ This benchmark measures full round-trip throughput:
 Client send -> Server-side processing -> Response return
 
 <p align="center">
-  <img src="Benchmark/Result/tls-round-trip.png" width="600" />
+  <img src="../Benchmark/Result/tls-round-trip.png" width="600" />
 </p>
 
 ### Test Conditions
@@ -121,7 +121,7 @@ Message Throughput: 7,755,636 msg/s
 Send pattern: Server broadcasts identical payload to all connected clients
 
 <p align="center">
-  <img src="Benchmark/Result/tls-fan-out-100.png" width="600" />
+  <img src="../Benchmark/Result/tls-fan-out-100.png" width="600" />
 </p>
 
 ### Test Conditions
