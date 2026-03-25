@@ -1,5 +1,6 @@
 # Dignus Actor Framework
 
+[![Actor.Abstractions](https://img.shields.io/nuget/v/Dignus.Actor.Abstractions.svg?label=Actor.Abstractions)](https://www.nuget.org/packages/Dignus.Actor.Abstractions)
 [![Actor.Core](https://img.shields.io/nuget/v/Dignus.Actor.Core.svg?label=Actor.Core)](https://www.nuget.org/packages/Dignus.Actor.Core)
 [![ActorServer](https://img.shields.io/nuget/v/Dignus.ActorServer.svg?label=ActorServer)](https://www.nuget.org/packages/Dignus.ActorServer)
 
