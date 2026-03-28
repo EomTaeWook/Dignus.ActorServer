@@ -238,7 +238,7 @@ ActorPacketProcessor
 SessionActor
     |
     v
-NetworkSession
+Actor
 ```
 
 ---
@@ -264,40 +264,160 @@ Kill flow:
 5. Actor removed from ActorSystem
 6. TransportActor disposes underlying session
 
-## Protocol Pipeline Flow
+# Protocol Model (Recommended)
 
-`Dignus.ActorServer` protocol pipeline works in two phases:
+Dignus.ActorServer uses a **handler-less protocol model by default**.
 
-1. **Registration phase**
-2. **Runtime execution phase**
+- No protocol handlers  
+- No pipeline required  
+- Direct message dispatch to actor  
 
 ---
 
-## 1. Registration phase
+## Protocol Definition
+
+```csharp
+using Dignus.Actor.Network.Attributes;
+
+[Protocol((int)CSProtocol.EchoMessage)]
+internal class EchoMessage : IActorMessage
+{
+}
+```
+
+---
+
+## Registration (Startup)
+
+```csharp
+Singleton<ProtocolBodyTypeMapper>.Instance.Register(
+    typeof(EchoMessage).Assembly
+);
+```
+
+---
+
+## Decode (Network Layer)
+
+```csharp
+public IActorMessage Deserialize(ReadOnlySpan<byte> packet)
+{
+    int protocol = BitConverter.ToUInt16(packet[..2]);
+
+    var mapper = Singleton<ProtocolBodyTypeMapper>.Instance;
+
+    if (!mapper.ValidateProtocol(protocol))
+    {
+        return null;
+    }
+
+    var bodyType = mapper.GetBodyType(protocol);
+
+    return (IActorMessage)JsonSerializer.Deserialize(
+        packet.Slice(2),
+        bodyType
+    );
+}
+```
+
+---
+
+## Actor Execution
+
+```csharp
+protected override async ValueTask OnReceive(IActorMessage message, IActorRef sender)
+{
+    if (message is EchoMessage echo)
+    {
+        // handle message
+    }
+}
+```
+
+---
+
+## Execution Flow
+
+```
+TCP Packet
+    ↓
+Protocol Extract
+    ↓
+BodyType Resolve
+    ↓
+Deserialize
+    ↓
+Actor Message
+    ↓
+Mailbox Post
+    ↓
+Actor.OnReceive
+```
+
+---
+
+## Why This Model
+
+- No reflection-based handler binding  
+- No pipeline overhead  
+- No additional execution hop  
+- Lower latency  
+- Simple and predictable structure  
+
+---
+
+# Protocol Pipeline (Advanced)
+
+`Dignus.ActorServer` provides an optional protocol pipeline for advanced scenarios.
+
+This feature introduces an additional execution step and allows composing middleware
+into the protocol execution flow.
+
+---
+
+## When to Use Pipeline
+
+Use the protocol pipeline when you need:
+
+- Middleware (authentication, validation, logging)
+- Custom execution flow per protocol
+- Extensible and composable processing structure
+
+---
+
+## Pipeline Overview
+
+The pipeline enables chaining multiple middleware components before reaching the final handler.
+
+```
+Protocol → Middleware → Middleware → Handler → Actor
+```
+
+Each middleware can:
+
+- Inspect or modify the request
+- Execute logic before or after the next step
+- Short-circuit execution if needed
+
+---
+
+## Registration Phase
 
 At startup, protocol handlers are scanned and bound to the pipeline.
 
-    ActorProtocolPipeline.Register<TProtocol>()
-        ↓
-    Protocol method scan
-        ↓
-    Protocol name binding
-        ↓
-    Body type extraction
-        ↓
-    Middleware registration
-        ↓
-    Compiled protocol invoker build
+```
+ActorProtocolPipeline.Register<TProtocol>()
+    ↓
+Protocol method scan
+    ↓
+Body type extraction
+    ↓
+Middleware registration
+    ↓
+Delegate compilation
+```
 
-During registration the framework performs the following steps:
-
-- Protocol handler methods are discovered
-- Protocol names are mapped to handler methods
-- Handler parameter body types are extracted and cached
-- Middleware is registered per handler method
-- Dispatch delegates are compiled for runtime execution
-
-Example registration:
+### Example
 
 ```csharp
 ActorProtocolPipeline<ClientPipelineContext>.Register<CLSProtocol>((method, pipeline) =>
@@ -306,138 +426,94 @@ ActorProtocolPipeline<ClientPipelineContext>.Register<CLSProtocol>((method, pipe
     var orderedFilters = filters.OrderBy(r => r.Order).ToList();
 
     var middleware = new ProtocolActionMiddleware(orderedFilters);
+
     pipeline.Use(middleware);
 });
 ```
 
 ---
 
-## 2. Runtime execution phase
+## Runtime Execution
 
-When a TCP packet arrives, the protocol pipeline executes the following flow.
+When a packet is received:
 
-    TCP packet received
-        ↓
-    PacketFramer.Deserialize
-        ↓
-    Protocol number extracted
-        ↓
-    Protocol validation
-        ↓
-    Body type resolved from registered protocol metadata
-        ↓
-    JSON body deserialization
-        ↓
-    Actor message creation
-        ↓
-    Actor mailbox post
-        ↓
-    PlayerActor.OnReceive
-        ↓
-    Pipeline execution
-        ↓
-    Middleware execution
-        ↓
-    Protocol handler invocation
-        ↓
-    Actor state processing
+```
+TCP Packet
+    ↓
+Deserialize
+    ↓
+Protocol Resolve
+    ↓
+Create Context
+    ↓
+Pipeline Execution
+    ↓
+Middleware Chain
+    ↓
+Handler Execution
+    ↓
+Actor Logic
+```
 
 ---
 
-## Decode stage (Network layer)
-
-Incoming packets are decoded and transformed into actor messages.
+## Decode Example
 
 ```csharp
 public IActorMessage Deserialize(ReadOnlySpan<byte> packet)
 {
     int protocol = BitConverter.ToUInt16(packet[..ProtocolSize]);
 
-    if (ActorProtocolPipeline<ClientPipelineContext>.ValidateProtocol(protocol) == false)
+    if (!ActorProtocolPipeline<ClientPipelineContext>.ValidateProtocol(protocol))
     {
-        LogHelper.Error($"not found protocol : {protocol}");
         return null;
     }
 
-    var bodyString = Encoding.UTF8.GetString(packet[ProtocolSize..]);
-
     var bodyType = ActorProtocolPipeline<ClientPipelineContext>.GetBodyType(protocol);
 
-    var bodyPacketObject = JsonSerializer.Deserialize(bodyString, bodyType);
+    var body = JsonSerializer.Deserialize(packet[ProtocolSize..], bodyType);
 
-    async Task lambdaMessage(PlayerActor actor)
+    async Task lambda(PlayerActor actor)
     {
-        var context = new ClientPipelineContext()
+        var context = new ClientPipelineContext
         {
-            Body = bodyPacketObject,
-            Handler = clientPacketHandler,
             Protocol = protocol,
+            Body = body,
             State = actor
         };
 
         await ActorProtocolPipeline<ClientPipelineContext>.ExecuteAsync(ref context);
     }
 
-    return new InBoundLambdaMessage(lambdaMessage);
+    return new InBoundLambdaMessage(lambda);
 }
 ```
 
 ---
 
-## Actor execution stage
+## Characteristics
 
-The actor receives the decoded message and executes the protocol pipeline.
+- Middleware can be composed freely
+- Execution flow can be customized per protocol
+- Supports cross-cutting concerns (auth, logging, validation)
+- Adds one additional execution step compared to the default model
 
-```csharp
-protected override async ValueTask OnReceive(IActorMessage message, IActorRef sender)
-{
-    if (message is InBoundLambdaMessage inBoundLambdaMessage)
-    {
-        inBoundLambdaMessage.Invoke(this);
-    }
-}
+---
+
+## Comparison
+
+```
+Default (Recommended):
+    Protocol → BodyType → Deserialize → Actor
+
+Pipeline (Advanced):
+    Protocol → Middleware → Handler → Actor
 ```
 
 ---
 
-## Final handler execution
+## Summary
 
-The pipeline eventually invokes the protocol handler.
+Use pipeline only when you need control over execution flow.
 
-```csharp
-[ProtocolName("Login")]
-public async Task Process(PlayerActor actor, Login packet)
-{
-    var currentState = actor.GetCurrentState();
-    await currentState.HandlePacketAsync(packet);
-}
-```
-
----
-
-## Execution Summary
-
-    Register
-    → Protocol binding
-    → Body type extraction
-    → Middleware registration
-
-    Receive packet
-    → Decode packet
-    → Resolve BodyType
-    → Deserialize body
-    → Create actor message
-    → Post to actor mailbox
-    → Execute pipeline
-    → Run middleware
-    → Invoke handler
-    → Actor state logic
-
----
-
-## Key Characteristics
-
-- Packet decoding happens before actor execution
-- Actor logic remains lightweight
-- Middleware executes inside the actor context
-- No shared state across actors
+For most cases, the direct message model is simpler and sufficient.

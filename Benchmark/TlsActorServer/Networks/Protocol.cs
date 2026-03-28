@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TcpActorServer.Networks
+namespace TlsActorServer.Networks
 {
     internal enum CSProtocol
     {

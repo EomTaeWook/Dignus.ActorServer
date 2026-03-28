@@ -2,8 +2,9 @@
 using Dignus.Actor.Network.Codec;
 using Dignus.Actor.Network.Messages;
 using Dignus.Sockets.Interfaces;
+using TlsActorServer.Messages;
 
-namespace TlsActorServer.Messages
+namespace TlsActorServer.Networks.Codecs
 {
     internal class MessageSerializer : IActorMessageSerializer
     {

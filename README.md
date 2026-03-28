@@ -4,19 +4,21 @@
 [![Actor.Core](https://img.shields.io/nuget/v/Dignus.Actor.Core.svg?label=Actor.Core)](https://www.nuget.org/packages/Dignus.Actor.Core)
 [![ActorServer](https://img.shields.io/nuget/v/Dignus.ActorServer.svg?label=ActorServer)](https://www.nuget.org/packages/Dignus.ActorServer)
 
-High-performance actor-based runtime and network server framework built on top of Dignus.
+High-performance actor-based runtime and network server framework.
 
 ---
 
 ## Overview
 
-Dignus Actor Framework is composed of three packages:
+Dignus Actor Framework provides a complete solution for building
+**high-throughput, message-driven systems**.
 
-- `Dignus.Actor.Abstractions` → Minimal shared contracts (`IActorMessage`)
-- `Dignus.Actor.Core` → Actor runtime and messaging primitives
-- `Dignus.ActorServer` → Network transport and server integration
+It is designed around:
 
-The framework follows a strict message-driven concurrency model with dedicated dispatcher threads and no shared mutable state.
+- Single-threaded actor execution
+- Message-based concurrency
+- Zero shared mutable state
+- Minimal network overhead
 
 ---
 
@@ -25,11 +27,11 @@ The framework follows a strict message-driven concurrency model with dedicated d
 ```
 Application
    ↓
-Dignus.ActorServer (Network / Protocol / Session)
+Dignus.ActorServer (Network / Session / Protocol)
    ↓
-Dignus.Actor.Core (Actor runtime / Dispatcher / Messaging)
+Dignus.Actor.Core (Actor Runtime / Dispatcher / Messaging)
    ↓
-Dignus.Actor.Abstractions (Shared contracts)
+Dignus.Actor.Abstractions (Contracts)
 ```
 
 ---
@@ -42,9 +44,12 @@ Minimal shared contracts.
 
 Includes:
 
-- IActorMessage
+- `IActorMessage`
 
-This package allows protocol and model libraries to integrate with the actor system without referencing the full runtime.
+Used by:
+
+- Protocol definitions
+- Shared message models
 
 ---
 
@@ -55,10 +60,10 @@ Core actor runtime.
 Includes:
 
 - Actor execution model
-- Message system (IActorMessage)
-- Actor references (IActorRef)
 - Dispatcher scheduling
-- Actor lifecycle management
+- Actor lifecycle
+- Message processing
+- `IActorRef`
 
 Does NOT include:
 
@@ -77,43 +82,18 @@ Includes:
 - TCP / TLS server
 - Session actor model
 - Packet decode / encode
-- Protocol pipeline
-- Middleware execution
+- Protocol handling
+- Optional protocol pipeline
 
 ---
 
-## Performance
-
-Network performance benchmarks are documented separately:
-
-- [Dignus.Actor.Network Benchmark](publish/Dignus.Actor.Network.md)
-
----
-
-## Design Goals
+## Core Characteristics
 
 - Single-threaded execution per actor
-- Message-driven concurrency model
 - No shared mutable state
-- Dedicated dispatcher threads
-- High-throughput network processing
-- Clear separation of runtime and transport
-
----
-
-## Core Execution Model
-
-Actors are distributed across dispatchers:
-
-```text
-dispatcherIndex = actorId % dispatcherCount
-```
-
-Each actor:
-
-- Processes messages sequentially
-- Executes on a dedicated dispatcher thread
-- Resumes async continuations on the same thread
+- Dedicated dispatcher threads (no ThreadPool usage)
+- Lock-free message scheduling
+- Deterministic execution model
 
 ---
 
@@ -130,10 +110,24 @@ Actor Mailbox
    ↓
 Dispatcher Execution
    ↓
-Protocol Pipeline
-   ↓
-Handler Execution
+Actor.OnReceive
 ```
+
+---
+
+## Protocol Model
+
+Dignus.ActorServer uses a **direct message model by default**.
+
+```
+Protocol → Deserialize → Actor
+```
+
+- No handler required
+- No pipeline required
+- Minimal overhead
+
+An optional pipeline is available when middleware or execution control is needed.
 
 ---
 
@@ -150,6 +144,7 @@ public sealed class SampleActor : ActorBase
     {
         if (message is PingMessage)
         {
+            // handle message
         }
 
         return ValueTask.CompletedTask;
@@ -161,13 +156,28 @@ public sealed class SampleActor : ActorBase
 
 ## When to Use
 
-- Use `Dignus.Actor.Core` when you only need the actor runtime
-- Use `Dignus.ActorServer` when you need networking and protocol handling
+Use this framework when you need:
+
+- High-throughput network servers
+- Actor-based concurrency model
+- Deterministic execution per entity
+- Clear separation between runtime and transport
+
+---
+
+## Performance
+
+Network benchmarks are available here:
+
+- [Dignus.Actor.Network Benchmark](publish/Dignus.Actor.Network.md)
 
 ---
 
 ## Summary
 
-Dignus Actor Framework provides a complete solution for building high-performance message-driven systems.
+Dignus Actor Framework separates the actor runtime from the network layer,
+allowing flexible and scalable system design.
 
-It separates the actor runtime from the network layer, allowing flexible and scalable system design.
+- **Simple by default**
+- **Extensible when needed**
+- **Designed for performance**

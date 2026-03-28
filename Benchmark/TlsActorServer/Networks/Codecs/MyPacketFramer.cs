@@ -3,9 +3,9 @@ using Dignus.Actor.Network.Codec;
 using Dignus.Collections;
 using Dignus.Sockets;
 using Dignus.Sockets.Interfaces;
-using TcpActorServer.Messages;
+using TlsActorServer.Messages;
 
-namespace TcpActorServer.Networks.PacketFramer
+namespace TlsActorServer.Networks.Codecs
 {
     internal class MyPacketFramer : IActorMessageDecoder
     {

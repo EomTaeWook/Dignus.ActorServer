@@ -1,11 +1,10 @@
-﻿using Dignus.Actor.Core;
-using Dignus.Actor.Core.DeadLetter;
+﻿using Dignus.Actor.Core.DeadLetter;
 using Dignus.Actor.Network;
+using Dignus.Framework;
 using Dignus.Log;
 using TcpActorServer.Messages;
-using TcpActorServer.Middleware;
 using TcpActorServer.Networks;
-using TcpActorServer.Networks.PacketFramer;
+using TcpActorServer.Networks.Codecs;
 
 namespace TcpActorServer
 {
@@ -13,11 +12,7 @@ namespace TcpActorServer
     {
         public TcpServer() : base(new MessageSerializer(), new MyPacketFramer())
         {
-            ActorProtocolPipeline<ClientContext>.Register<Protocol>((method, context) =>
-            {
-            });
-
-
+            Singleton<ProtocolBodyTypeMapper>.Instance.Register(typeof(EchoMessage).Assembly);
         }
         protected override EchoActor CreateSessionActor()
         {

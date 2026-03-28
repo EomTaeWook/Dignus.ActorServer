@@ -1,12 +1,10 @@
-﻿using Dignus.Actor.Core;
-using Dignus.Actor.Core.DeadLetter;
+﻿using Dignus.Actor.Core.DeadLetter;
 using Dignus.Actor.Network;
 using Dignus.Log;
 using Dignus.Sockets.Interfaces;
 using System.Security.Cryptography.X509Certificates;
-using TlsActorServer.Messages;
 using TlsActorServer.Networks;
-using TlsActorServer.Networks.PacketFramer;
+using TlsActorServer.Networks.Codecs;
 
 namespace TlsActorServer
 {
