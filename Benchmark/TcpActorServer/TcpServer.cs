@@ -12,7 +12,7 @@ namespace TcpActorServer
     {
         public TcpServer() : base(new MessageSerializer(), new MyPacketFramer())
         {
-            Singleton<ProtocolBodyTypeMapper>.Instance.Register(typeof(EchoMessage).Assembly);
+            Singleton<ProtocolBodyTypeMapper>.Instance.AddMapping(CSProtocol.EchoMessage, typeof(EchoMessage));
         }
         protected override EchoActor CreateSessionActor()
         {

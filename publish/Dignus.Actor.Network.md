@@ -279,7 +279,6 @@ Dignus.ActorServer uses a **handler-less protocol model by default**.
 ```csharp
 using Dignus.Actor.Network.Attributes;
 
-[Protocol((int)CSProtocol.EchoMessage)]
 internal class EchoMessage : IActorMessage
 {
 }
@@ -290,12 +289,42 @@ internal class EchoMessage : IActorMessage
 ## Registration (Startup)
 
 ```csharp
-Singleton<ProtocolBodyTypeMapper>.Instance.Register(
-    typeof(EchoMessage).Assembly
-);
+Singleton<ProtocolBodyTypeMapper>.Instance.AddMapping<EchoMessage>(CSProtocol.EchoMessage);
 ```
 
 ---
+
+### Custom Registration Pattern
+
+For larger projects, you can build your own registration layer on top of it.
+
+For example, using extension methods:
+
+```csharp
+public static class ProtocolMappingExtensions
+{
+    public static void RegisterGameProtocols(this ProtocolBodyTypeMapper mapper)
+    {
+        mapper.AddMapping<Login>(CSProtocol.Login);
+        mapper.AddMapping<Logout>(CSProtocol.Logout);
+        mapper.AddMapping<GetRoomList>(CSProtocol.GetRoomList);
+    }
+}
+```
+
+Usage:
+
+```csharp
+Singleton<ProtocolBodyTypeMapper>.Instance.RegisterGameProtocols();
+```
+
+You can also implement automatic registration using:
+
+- attributes
+- assembly scanning
+- naming conventions
+
+This approach keeps the framework simple while allowing each server to define its own mapping strategy.
 
 ## Decode (Network Layer)
 

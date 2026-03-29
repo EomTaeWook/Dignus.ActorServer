@@ -1,55 +1,21 @@
-﻿using Dignus.Actor.Network.Attributes;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace Dignus.Actor.Network
 {
     public class ProtocolBodyTypeMapper
     {
         private readonly Dictionary<int, Type> _protocolBodyTypes = new();
-        public void Register(params Assembly[] assemblies)
+
+        public void AddMapping<TBody>(Enum protocol)
         {
-            if (assemblies == null || assemblies.Length == 0)
-            {
-                throw new ArgumentException("assemblies is empty.", nameof(assemblies));
-            }
-
-            foreach (Assembly assembly in assemblies)
-            {
-                if (assembly == null)
-                {
-                    continue;
-                }
-
-                Type[] packetTypes = assembly.GetTypes();
-
-                foreach (Type packetType in packetTypes)
-                {
-                    ProtocolAttribute protocolAttribute = packetType.GetCustomAttribute<ProtocolAttribute>();
-                    if (protocolAttribute == null)
-                    {
-                        continue;
-                    }
-
-                    if (_protocolBodyTypes.TryGetValue(protocolAttribute.Protocol, out Type registeredBodyType))
-                    {
-                        throw new InvalidOperationException($"Protocol duplication: {protocolAttribute.Protocol}");
-                    }
-
-                    _protocolBodyTypes.Add(protocolAttribute.Protocol, packetType);
-                }
-            }
+            AddMapping(protocol, typeof(TBody));
         }
-        public void Add<TBody>(Enum protocol)
+        public void AddMapping(Enum protocol, Type bodyType)
         {
-            Add(protocol, typeof(TBody));
-        }
-        public void Add(Enum protocol, Type type)
-        {
-            if (type == null)
+            if (bodyType == null)
             {
-                throw new ArgumentNullException(nameof(type));
+                throw new ArgumentNullException(nameof(bodyType));
             }
             var protocolValue = Convert.ToInt32(protocol);
 
@@ -58,7 +24,7 @@ namespace Dignus.Actor.Network
                 throw new InvalidOperationException($"Protocol duplication: {protocolValue}");
             }
             var value = Convert.ToInt32(protocol);
-            _protocolBodyTypes.Add(value, type);
+            _protocolBodyTypes.Add(value, bodyType);
         }
         public Type GetBodyType(int protocol)
         {
@@ -70,7 +36,7 @@ namespace Dignus.Actor.Network
             return bodyType;
         }
 
-        public bool ValidateProtocol(int protocol)
+        public bool Contains(int protocol)
         {
             return _protocolBodyTypes.ContainsKey(protocol);
         }
