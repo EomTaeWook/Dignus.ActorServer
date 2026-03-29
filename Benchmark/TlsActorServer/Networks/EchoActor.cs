@@ -15,7 +15,7 @@ namespace TlsActorServer.Networks
                 NetworkSession.SendAsync(rawMessage);
             }
         }
-        public override void OnKill() 
+        protected override void OnKill() 
         {
         }
     }

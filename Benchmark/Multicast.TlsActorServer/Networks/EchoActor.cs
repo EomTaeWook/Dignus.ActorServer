@@ -18,7 +18,7 @@ namespace Multicast.TlsActorServer.Networks
                 NetworkSession.Send(rawMessage);
             }
         }
-        public override void OnKill() 
+        protected override void OnKill() 
         {
 
         }

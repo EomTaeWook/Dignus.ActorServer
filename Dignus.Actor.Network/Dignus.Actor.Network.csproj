@@ -10,7 +10,7 @@
     <AssemblyName>Dignus.ActorServer</AssemblyName>
     <AssemblyTitle>Dignus.ActorServer</AssemblyTitle>
     
-    <Version>3.0.0-preview.5</Version>
+    <Version>3.0.0-preview.6</Version>
 
     <Copyright>© 2026 EomTaeWook. Released under the MIT License.</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>

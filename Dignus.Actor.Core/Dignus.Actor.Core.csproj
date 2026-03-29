@@ -7,7 +7,7 @@
 
     <PackageId>$(AssemblyName)</PackageId>
     <Title>$(AssemblyName)</Title>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
 
     <Copyright>© 2026 EomTaeWook. Released under the MIT License.</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>

@@ -18,7 +18,7 @@ namespace Multicast.TcpActorServer.Networks
                 NetworkSession.Send(rawMessage);
             }
         }
-        public override void OnKill() 
+        protected override void OnKill() 
         {
 
         }
