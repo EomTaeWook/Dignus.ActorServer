@@ -331,21 +331,21 @@ This approach keeps the framework simple while allowing each server to define it
 ```csharp
 public IActorMessage Deserialize(ReadOnlySpan<byte> packet)
 {
-    int protocol = BitConverter.ToUInt16(packet[..2]);
+    int protocol = BitConverter.ToUInt16(packet[..PacketSize]);
 
-    var mapper = Singleton<ProtocolBodyTypeMapper>.Instance;
-
-    if (!mapper.ValidateProtocol(protocol))
+    if (_bodyTypeMapper.ContainsProtocol(protocol) == false)
     {
+        LogHelper.Error($"not found protocol : {protocol}");
         return null;
     }
 
-    var bodyType = mapper.GetBodyType(protocol);
+    var bodyString = Encoding.UTF8.GetString(packet[ProtocolSize..]);
 
-    return (IActorMessage)JsonSerializer.Deserialize(
-        packet.Slice(2),
-        bodyType
-    );
+    var bodyType = _bodyTypeMapper.GetBodyType(protocol);
+
+    var bodyPacketObject = JsonSerializer.Deserialize(bodyString, bodyType);
+
+    return (IActorMessage)bodyPacketObject;
 }
 ```
 
@@ -491,23 +491,22 @@ Actor Logic
 ```csharp
 public IActorMessage Deserialize(ReadOnlySpan<byte> packet)
 {
-    int protocol = BitConverter.ToUInt16(packet[..ProtocolSize]);
+    int protocol = BitConverter.ToUInt16(packet[..PacketSize]);
 
-    if (!ActorProtocolPipeline<ClientPipelineContext>.ValidateProtocol(protocol))
+    if(ActorProtocolPipeline<ClientPipelineContext>.ValidateProtocol(protocol) == false)
     {
+        LogHelper.Error($"not found protocol : {protocol}");
         return null;
     }
 
-    var bodyType = ActorProtocolPipeline<ClientPipelineContext>.GetBodyType(protocol);
-
-    var body = JsonSerializer.Deserialize(packet[ProtocolSize..], bodyType);
+    var bodyString = Encoding.UTF8.GetString(packet[ProtocolSize..]);
 
     async Task lambda(PlayerActor actor)
     {
         var context = new ClientPipelineContext
         {
             Protocol = protocol,
-            Body = body,
+            Body = bodyString,
             State = actor
         };
 

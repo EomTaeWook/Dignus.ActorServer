@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2026 EomTaeWook
+// Licensed under the MIT License. See LICENSE file in the project root.
+// Part of Dignus.ActorServer
+
+using System;
 using System.Collections.Generic;
 
 namespace Dignus.Actor.Network
@@ -36,7 +40,7 @@ namespace Dignus.Actor.Network
             return bodyType;
         }
 
-        public bool Contains(int protocol)
+        public bool ContainsProtocol(int protocol)
         {
             return _protocolBodyTypes.ContainsKey(protocol);
         }
