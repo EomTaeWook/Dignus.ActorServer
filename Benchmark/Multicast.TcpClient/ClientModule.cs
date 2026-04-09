@@ -3,19 +3,16 @@ using Dignus.Sockets.Interfaces;
 
 namespace Multicast.TcpClient
 {
-    internal class ClientModule : ClientBase
+    internal class ClientModule(SessionConfiguration sessionConfiguration) : TcpClientBase(sessionConfiguration)
     {
         private bool _isConnect = false;
-        private ISession _session;
+        private ISession? _session;
 
-        public ClientModule(SessionConfiguration sessionConfiguration) : base(sessionConfiguration)
-        {
-        }
         public void SendMessage(byte[] message, int count)
         {
             for (int i = 0; i < count; i++)
             {
-                _session.SendAsync(message);
+                _session?.SendAsync(message);
             }
         }
 

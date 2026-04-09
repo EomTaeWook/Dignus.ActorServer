@@ -4,15 +4,12 @@ using TcpEchoClient.Handler;
 
 namespace TcpEchoClient
 {
-    internal class ClientModule : ClientBase
+    internal class ClientModule(SessionConfiguration sessionConfiguration) : TcpClientBase(sessionConfiguration)
     {
         private bool _isConnect = false;
         private ISession _session;
         private EchoHandler _echoHandler;
 
-        public ClientModule(SessionConfiguration sessionConfiguration) : base(sessionConfiguration)
-        {
-        }
         public void SendEcho(string message)
         {
             _echoHandler.SendEcho(message);

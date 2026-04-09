@@ -5,13 +5,13 @@
 using Dignus.Actor.Network.Internals;
 using Dignus.Sockets;
 using Dignus.Sockets.Interfaces;
+using Dignus.Sockets.Tcp;
 
 namespace Dignus.Actor.Network.Hosts
 {
     internal class ActorTcpHost(IActorHostHandler handler,
-        SessionConfiguration sessionConfiguration,
-        int initialSessionPoolSize
-        ) : ServerBase(sessionConfiguration, initialSessionPoolSize)
+        SessionConfiguration sessionConfiguration
+        ) : TcpServerBase(sessionConfiguration)
     {
         protected override void OnAccepted(ISession session)
         {

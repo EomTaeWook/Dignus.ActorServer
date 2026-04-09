@@ -9,16 +9,13 @@ namespace Dignus.Actor.Network.Options
         public ActorSystemOptions ActorSystem { get; set; } = new ActorSystemOptions();
         public ActorNetworkOptions Network { get; set; } = new ActorNetworkOptions();
 
-        public int InitialSessionPoolSize { get; set; }
-
         public static ServerOptionsBuilder Builder() => new();
         public sealed class ServerOptionsBuilder : IActorOptionsBuilderBase<ServerOptions>
         {
             private readonly ServerOptions _options = new()
             {
                 ActorSystem = new ActorSystemOptions(),
-                Network = new ActorNetworkOptions(),
-                InitialSessionPoolSize = 0
+                Network = new ActorNetworkOptions()
             };
 
             public ServerOptions Options => _options;

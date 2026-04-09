@@ -40,13 +40,13 @@ Client send -> Server-side processing -> Response return
 ### Result
 
 ```
-Total Time: 10.008 seconds
+Total Time: 10.002 seconds
 Total Client: 1
-Total Bytes: 3,269,163,360
-Total Data: 3.04 GiB
-Total Message: 102,161,355
-Data Throughput: 311.53 MiB/s
-Message Throughput: 10,208,278 msg/s
+Total Bytes: 4,364,075,744
+Total Data: 4.06 GiB
+Total Message: 136,377,367
+Data Throughput: 416.11 MiB/s
+Message Throughput: 13,634,960 msg/s
 ```
 
 ---
@@ -105,13 +105,13 @@ Client send -> Server-side processing -> Response return
 ### Result
 
 ```
-Total Time: 10.002 seconds
+Total Time: 10.011 seconds
 Total Client: 1
-Total Bytes: 2,482,299,424
-Total Data: 2.31 GiB
-Total Message: 77,571,857
-Data Throughput: 236.68 MiB/s
-Message Throughput: 7,755,636 msg/s
+Total Bytes: 3,531,230,304
+Total Data: 3.29 GiB
+Total Message: 110,350,947
+Data Throughput: 336.41 MiB/s
+Message Throughput: 11,023,486 msg/s
 ```
 
 ---

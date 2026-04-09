@@ -70,8 +70,7 @@ namespace Dignus.Actor.Network
             _actorPacketProcessor = new ActorPacketProcessor(_actorNetworkOptions.Decoder, this);
 
             _actorTcpHost = new ActorTcpHost(this,
-                CreateHostConfigurationFactory(options),
-                options.InitialSessionPoolSize);
+                CreateHostConfigurationFactory(options));
         }
 
         private void OnDeadLetterDetected(DeadLetterMessage obj)
