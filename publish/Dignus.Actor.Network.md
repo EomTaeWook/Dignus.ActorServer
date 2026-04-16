@@ -2,363 +2,207 @@
 
 [![NuGet](https://img.shields.io/nuget/v/Dignus.ActorServer.svg)](https://www.nuget.org/packages/Dignus.ActorServer/)
 
-High-performance Actor-based network server framework.
+High-performance actor-based network server framework.
 
 ---
 
-## Performance
+## Overview
 
-### Benchmark Environment
-- CPU: Intel Core i5-12400F (12th Gen)
-- Cores / Threads: 6 / 12
-- Max Turbo Frequency: 4.40 GHz
-- Memory: 32 GB
-- Architecture: x64
-- Operating System: Windows 64-bit
-- Runtime: .NET 10 (Release x64)
+`Dignus.ActorServer` combines:
 
-### Round-Trip Benchmark (Plain TCP)
+- Actor-based execution (`Dignus.Actor.Core`)
+- High-performance networking (TCP / TLS)
+- Protocol-based message dispatch
 
-This benchmark measures full round-trip throughput:
-
-Client send -> Server-side processing -> Response return
-
-<p align="center">
-  <img src="../Benchmark/Result/tcp-round-trip.png" width="600" />
-</p>
-
-### Test Conditions
-
-- Server address: 127.0.0.1
-- Server port: 5000
-- Protocol: Plain TCP (no TLS)
-- Working clients: 1
-- In-flight messages per client: 1000
-- Message size: 32 bytes
-- Benchmark duration: 10 seconds
-
-### Result
-
-```
-Total Time: 10.002 seconds
-Total Client: 1
-Total Bytes: 4,364,075,744
-Total Data: 4.06 GiB
-Total Message: 136,377,367
-Data Throughput: 416.11 MiB/s
-Message Throughput: 13,634,960 msg/s
-```
+Incoming network packets are decoded into actor messages and processed sequentially.
 
 ---
 
-### TCP Fan-out Benchmark (100 clients)
+## Quick Start
 
-Send pattern: Server broadcasts identical payload to all connected clients
+A minimal server consists of:
 
-<p align="center">
-  <img src="../Benchmark/Result/tcp-fan-out-100.png" width="600" />
-</p>
-
-### Test Conditions
-
-- Server address: 127.0.0.1
-- Server port: 5000
-- Protocol: Plain TCP (no TLS)
-- Working clients: 100
-- Message size: 32 bytes
-- Benchmark duration: 10 seconds
-
-### Result
-
-```
-Total Time: 10.008 seconds
-Total Client: 100
-Total Bytes: 4,909,594,848
-Total Data: 4.57 GiB
-Total Message: 153,424,839
-Data Throughput: 467.83 MiB/s
-Message Throughput: 15,329,728 msg/s
-```
+1. Register protocol mappings  
+2. Configure server options (decoder / serializer)  
+3. Create actor system  
+4. Implement session actor  
+5. Implement server  
+6. Start server  
 
 ---
 
-### TLS Round-Trip Benchmark
-
-This benchmark measures full round-trip throughput:
-
-Client send -> Server-side processing -> Response return
-
-<p align="center">
-  <img src="../Benchmark/Result/tls-round-trip.png" width="600" />
-</p>
-
-### Test Conditions
-
-- Server address: 127.0.0.1
-- Server port: 5000
-- Protocol: TLS over TCP
-- Working clients: 1
-- In-flight messages per client: 1000
-- Message size: 32 bytes
-- Benchmark duration: 10 seconds
-
-### Result
-
-```
-Total Time: 10.011 seconds
-Total Client: 1
-Total Bytes: 3,531,230,304
-Total Data: 3.29 GiB
-Total Message: 110,350,947
-Data Throughput: 336.41 MiB/s
-Message Throughput: 11,023,486 msg/s
-```
-
----
-
-### Tls Fan-out Benchmark (100 clients)
-
-Send pattern: Server broadcasts identical payload to all connected clients
-
-<p align="center">
-  <img src="../Benchmark/Result/tls-fan-out-100.png" width="600" />
-</p>
-
-### Test Conditions
-
-- Server address: 127.0.0.1
-- Server port: 5000
-- Protocol: TLS over TCP
-- Working clients: 100
-- Message size: 32 bytes
-- Benchmark duration: 10 seconds
-
-### Result
-
-```
-Total Time: 10.052 seconds
-Total Client: 100
-Total Bytes: 4,852,865,632
-Total Data: 4.52 GiB
-Total Message: 151,652,051
-Data Throughput: 460.42 MiB/s
-Message Throughput: 15,087,042 msg/s
-```
-
----
-
-### Performance Highlights
-
-- Over 10 million round-trip messages per second
-- Sustained throughput above 300 MiB/sec
-- Full end-to-end measurement (decode -> actor execution -> encode -> send)
-- Execution confined to dedicated dispatcher threads
-- No ThreadPool scheduling for actor logic
-
----
-
-## Design Goals
-
-- Strict separation of session logic and network I/O
-- Single-threaded execution guarantee per actor
-- Partition-based dispatcher scheduling
-- Async/await support with dispatcher-context enforcement
-- Message-driven concurrency model
-
----
-
-## Core Architecture
-
-### ActorSystem
-
-`ActorSystem` manages:
-
-- Multiple `ActorDispatcher` instances
-- Actor lifecycle
-- Partition-based distribution
-
-Actors are distributed using:
-
-```
-dispatcherIndex = actorId % dispatcherCount
-```
-
-Each actor executes through an `ActorRunner`.
-
----
-
-### ActorDispatcher
-
-Each dispatcher:
-
-- Owns a dedicated worker thread
-- Maintains a lock-free scheduling queue
-- Uses SemaphoreSlim for wake-up signaling
-- Enforces dispatcher-thread execution context
-
-Guarantees:
-
-- An actor always executes on the same thread
-- Async continuations resume on the dispatcher thread
-- No ThreadPool execution for actor logic
-
----
-
-### ActorRunner
-
-Execution engine of an actor.
-
-Responsibilities:
-
-- Mailbox processing
-- Lifecycle management
-- ValueTask-based async handling
-- Continuation rescheduling
-
-Execution model:
-
-1. Dequeue message
-2. Execute OnReceive
-3. If async incomplete -> schedule continuation
-4. Resume on dispatcher thread
-
-This guarantees logical single-threaded execution per actor.
-
----
-
-## Network Layer
-
-```
-TcpServerBase / TlsServerBase
-    |
-    v
-ActorPacketProcessor
-    |
-    v
-SessionActor
-    |
-    v
-Actor
-```
-
----
-
-## Concurrency Model
-
-- Single-threaded execution per actor
-- Dedicated dispatcher threads
-- No shared mutable state across actors
-- Message-passing communication model
-- Lock-free mailbox scheduling
-
----
-
-## Lifecycle Model
-
-Kill flow:
-
-1. sessionRef.Kill()
-2. ActorRunner transitions to killing state
-3. Finalization executed on dispatcher thread
-4. Mailbox cleared
-5. Actor removed from ActorSystem
-6. TransportActor disposes underlying session
-
-# Protocol Model (Recommended)
-
-Dignus.ActorServer uses a **handler-less protocol model by default**.
-
-- No protocol handlers  
-- No pipeline required  
-- Direct message dispatch to actor  
-
----
-
-## Protocol Definition
+## 1. Protocol Registration
 
 ```csharp
-using Dignus.Actor.Network.Attributes;
-
-internal class EchoMessage : IActorMessage
+private static void RegisterProtocol(IServiceProvider serviceProvider)
 {
+    var mapper = serviceProvider.GetService<ProtocolBodyTypeMapper>();
+
+    mapper.AddMapping<CreateAccountReq>(CLSProtocol.CreateAccountReq);
+    mapper.AddMapping<LoginReq>(CLSProtocol.LoginReq);
 }
 ```
 
 ---
 
-## Registration (Startup)
+## 2. Server Setup
 
 ```csharp
-Singleton<ProtocolBodyTypeMapper>.Instance.AddMapping<EchoMessage>(CSProtocol.EchoMessage);
+RegisterProtocol(serviceProvider);
+
+var serverOptions = ServerOptions.Builder()
+    .UseDecoder(new PacketFramer(serviceProvider))
+    .UseSerializer(new MessageSerializer())
+    .Build();
+
+var actorSystem = serviceProvider.GetService<ActorSystem>();
+
+var lobby = new LobbyServer(actorSystem, serverOptions, serviceProvider);
+lobby.Start(30000);
 ```
 
 ---
 
-### Custom Registration Pattern
-
-For larger projects, you can build your own registration layer on top of it.
-
-For example, using extension methods:
+## 3. Packet Decoder
 
 ```csharp
-public static class ProtocolMappingExtensions
+internal class PacketFramer(IServiceProvider serviceProvider) : IActorMessageDecoder
 {
-    public static void RegisterGameProtocols(this ProtocolBodyTypeMapper mapper)
+    protected const int PacketSize = sizeof(int);
+    protected const int ProtocolSize = sizeof(ushort);
+
+    private readonly ProtocolBodyTypeMapper _bodyTypeMapper =
+        serviceProvider.GetService<ProtocolBodyTypeMapper>();
+
+    public IActorMessage Deserialize(ReadOnlySpan<byte> packet)
     {
-        mapper.AddMapping<Login>(CSProtocol.Login);
-        mapper.AddMapping<Logout>(CSProtocol.Logout);
-        mapper.AddMapping<GetRoomList>(CSProtocol.GetRoomList);
+        int protocol = BitConverter.ToUInt16(packet[..PacketSize]);
+
+        if (_bodyTypeMapper.ContainsProtocol(protocol) == false)
+            return null;
+
+        var bodyString = Encoding.UTF8.GetString(packet[ProtocolSize..]);
+        var bodyType = _bodyTypeMapper.GetBodyType(protocol);
+
+        return (IActorMessage)JsonSerializer.Deserialize(bodyString, bodyType);
+    }
+
+    public bool TryFrame(ISession session, ArrayQueue<byte> buffer,
+        out ArraySegment<byte> packet,
+        out int consumedBytes)
+    {
+        packet = default;
+        consumedBytes = 0;
+
+        if (buffer.Count < PacketSize)
+            return false;
+
+        var packetSize = BitConverter.ToInt32(buffer.Peek(PacketSize));
+
+        if (buffer.Count < packetSize + PacketSize)
+            return false;
+
+        consumedBytes = BitConverter.ToInt32(buffer.Read(PacketSize));
+        return buffer.TrySlice(out packet, consumedBytes);
     }
 }
 ```
 
-Usage:
+---
+
+## 4. Serializer
 
 ```csharp
-Singleton<ProtocolBodyTypeMapper>.Instance.RegisterGameProtocols();
-```
-
-You can also implement automatic registration using:
-
-- attributes
-- assembly scanning
-- naming conventions
-
-This approach keeps the framework simple while allowing each server to define its own mapping strategy.
-
-## Decode (Network Layer)
-
-```csharp
-public IActorMessage Deserialize(ReadOnlySpan<byte> packet)
+internal class MessageSerializer : IActorMessageSerializer
 {
-    int protocol = BitConverter.ToUInt16(packet[..PacketSize]);
-
-    if (_bodyTypeMapper.ContainsProtocol(protocol) == false)
+    public IActorMessage Deserialize(ArraySegment<byte> bytes)
     {
-        LogHelper.Error($"not found protocol : {protocol}");
-        return null;
+        return new BinaryMessage(bytes);
     }
 
-    var bodyString = Encoding.UTF8.GetString(packet[ProtocolSize..]);
+    public ArraySegment<byte> MakeSendBuffer(INetworkActorMessage packet)
+    {
+        return packet is BinaryMessage msg ? msg.Data : default;
+    }
 
-    var bodyType = _bodyTypeMapper.GetBodyType(protocol);
-
-    var bodyPacketObject = JsonSerializer.Deserialize(bodyString, bodyType);
-
-    return (IActorMessage)bodyPacketObject;
+    public ArraySegment<byte> MakeSendBuffer(IPacket packet)
+    {
+        return default;
+    }
 }
 ```
 
 ---
 
-## Actor Execution
+## 5. Session Actor
 
 ```csharp
-protected override async ValueTask OnReceive(IActorMessage message, IActorRef sender)
+public class PlayerActor : SessionActorBase
 {
-    if (message is EchoMessage echo)
+    private readonly StateController _stateController;
+    private Player _player;
+
+    public PlayerActor(IServiceProvider serviceProvider)
     {
-        // handle message
+        _stateController = new StateController(this, serviceProvider);
+    }
+
+    protected override ValueTask OnReceive(IActorMessage message, IActorRef sender)
+    {
+        if (message is KickUserMessage kick)
+        {
+            Send(PacketFactory.MakePacket(LSCProtocol.ServerNotify, 0,
+                new ServerNotify { ErrorCode = kick.Reason }));
+
+            ChangeState(PlayerStateType.Disconnect);
+        }
+        else
+        {
+            return _stateController.HandleMessageAsync(message, sender);
+        }
+
+        return ValueTask.CompletedTask;
+    }
+
+    public void Send(INetworkActorMessage message)
+    {
+        NetworkSession.SendAsync(message);
+    }
+
+    public void Send(IPacket packet)
+    {
+        NetworkSession.SendAsync(packet);
+    }
+}
+```
+
+---
+
+## 6. Server Implementation
+
+```csharp
+internal class LobbyServer(
+    ActorSystem actorSystem,
+    ServerOptions serverOptions,
+    IServiceProvider serviceProvider)
+    : TcpServerBase<PlayerActor>(actorSystem, serverOptions)
+{
+    protected override PlayerActor CreateSessionActor()
+    {
+        var actor = new PlayerActor(serviceProvider);
+        actor.ChangeState(PlayerStateType.Initial);
+        return actor;
+    }
+
+    protected override void OnDeadLetterMessage(DeadLetterMessage deadLetterMessage)
+    {
+        LogHelper.Error($"{deadLetterMessage.Reason}");
+
+        if (deadLetterMessage.Reason == DeadLetterReason.ExecutionException)
+        {
+            var exceptionMessage = deadLetterMessage.Message as ActorExceptionMessage;
+            LogHelper.Error(exceptionMessage.Exception);
+        }
     }
 }
 ```
@@ -370,178 +214,162 @@ protected override async ValueTask OnReceive(IActorMessage message, IActorRef se
 ```
 TCP Packet
     ↓
-Protocol Extract
+Frame
     ↓
-BodyType Resolve
+Deserialize (protocol → message)
     ↓
-Deserialize
-    ↓
-Actor Message
-    ↓
-Mailbox Post
+Actor Mailbox
     ↓
 Actor.OnReceive
+    ↓
+Send Response
 ```
 
 ---
 
-## Why This Model
+## Performance
 
-- No reflection-based handler binding  
-- No pipeline overhead  
-- No additional execution hop  
-- Lower latency  
-- Simple and predictable structure  
+### Benchmark Environment
 
----
-
-# Protocol Pipeline (Advanced)
-
-`Dignus.ActorServer` provides an optional protocol pipeline for advanced scenarios.
-
-This feature introduces an additional execution step and allows composing middleware
-into the protocol execution flow.
+- CPU: Intel Core i5-12400F (12th Gen)
+- Cores / Threads: 6 / 12
+- Max Turbo Frequency: 4.40 GHz
+- Memory: 32 GB
+- Runtime: .NET 10 (Release x64)
 
 ---
 
-## When to Use Pipeline
+### Round-Trip (TCP)
 
-Use the protocol pipeline when you need:
-
-- Middleware (authentication, validation, logging)
-- Custom execution flow per protocol
-- Extensible and composable processing structure
-
----
-
-## Pipeline Overview
-
-The pipeline enables chaining multiple middleware components before reaching the final handler.
-
-```
-Protocol → Middleware → Middleware → Handler → Actor
-```
-
-Each middleware can:
-
-- Inspect or modify the request
-- Execute logic before or after the next step
-- Short-circuit execution if needed
-
----
-
-## Registration Phase
-
-At startup, protocol handlers are scanned and bound to the pipeline.
-
-```
-ActorProtocolPipeline.Register<TProtocol>()
-    ↓
-Protocol method scan
-    ↓
-Body type extraction
-    ↓
-Middleware registration
-    ↓
-Delegate compilation
-```
-
-### Example
-
-```csharp
-ActorProtocolPipeline<ClientPipelineContext>.Register<CLSProtocol>((method, pipeline) =>
-{
-    var filters = method.GetCustomAttributes<ActionAttribute>();
-    var orderedFilters = filters.OrderBy(r => r.Order).ToList();
-
-    var middleware = new ProtocolActionMiddleware(orderedFilters);
-
-    pipeline.Use(middleware);
-});
+```text
+Total Time: 10.002 seconds
+Total Client: 1
+Total Bytes: 4,364,075,744
+Total Data: 4.06 GiB
+Total Message: 136,377,367
+Data Throughput: 416.11 MiB/s
+Message Throughput: 13,634,960 msg/s
 ```
 
 ---
 
-## Runtime Execution
+### Fan-out (100 clients)
 
-When a packet is received:
-
-```
-TCP Packet
-    ↓
-Deserialize
-    ↓
-Protocol Resolve
-    ↓
-Create Context
-    ↓
-Pipeline Execution
-    ↓
-Middleware Chain
-    ↓
-Handler Execution
-    ↓
-Actor Logic
+```text
+Total Time: 10.008 seconds
+Total Client: 100
+Total Bytes: 4,909,594,848
+Total Data: 4.57 GiB
+Total Message: 153,424,839
+Data Throughput: 467.83 MiB/s
+Message Throughput: 15,329,728 msg/s
 ```
 
 ---
 
-## Decode Example
+### TLS Round-Trip
 
-```csharp
-public IActorMessage Deserialize(ReadOnlySpan<byte> packet)
-{
-    int protocol = BitConverter.ToUInt16(packet[..PacketSize]);
-
-    if(ActorProtocolPipeline<ClientPipelineContext>.ValidateProtocol(protocol) == false)
-    {
-        LogHelper.Error($"not found protocol : {protocol}");
-        return null;
-    }
-
-    var bodyString = Encoding.UTF8.GetString(packet[ProtocolSize..]);
-
-    async Task lambda(PlayerActor actor)
-    {
-        var context = new ClientPipelineContext
-        {
-            Protocol = protocol,
-            Body = bodyString,
-            State = actor
-        };
-
-        await ActorProtocolPipeline<ClientPipelineContext>.ExecuteAsync(ref context);
-    }
-
-    return new InBoundLambdaMessage(lambda);
-}
+```text
+Total Time: 10.011 seconds
+Total Client: 1
+Total Bytes: 3,531,230,304
+Total Data: 3.29 GiB
+Total Message: 110,350,947
+Data Throughput: 336.41 MiB/s
+Message Throughput: 11,023,486 msg/s
 ```
 
 ---
 
-## Characteristics
+### TLS Fan-out (100 clients)
 
-- Middleware can be composed freely
-- Execution flow can be customized per protocol
-- Supports cross-cutting concerns (auth, logging, validation)
-- Adds one additional execution step compared to the default model
+```text
+Total Time: 10.052 seconds
+Total Client: 100
+Total Bytes: 4,852,865,632
+Total Data: 4.52 GiB
+Total Message: 151,652,051
+Data Throughput: 460.42 MiB/s
+Message Throughput: 15,087,042 msg/s
+```
 
 ---
 
-## Comparison
+### Highlights
+
+- 10M+ messages/sec throughput
+- 300–450 MiB/s sustained throughput
+- full end-to-end measurement (decode → actor → encode → send)
+- no ThreadPool usage for actor execution
+
+---
+
+## Architecture Overview
 
 ```
-Default (Recommended):
-    Protocol → BodyType → Deserialize → Actor
-
-Pipeline (Advanced):
-    Protocol → Middleware → Handler → Actor
+TcpServerBase / TlsServerBase
+        ↓
+ActorPacketProcessor
+        ↓
+SessionActor
+        ↓
+Actor
 ```
+
+---
+
+## Concurrency Model
+
+- single-threaded execution per actor
+- dispatcher-based scheduling
+- no shared mutable state
+- message-driven processing
+
+---
+
+## Protocol Model (Default)
+
+```
+Protocol → BodyType → Deserialize → Actor
+```
+
+- no handler binding
+- minimal overhead
+- direct actor execution
+
+---
+
+## Protocol Pipeline (Advanced)
+
+```
+Protocol → Middleware → Handler → Actor
+```
+
+Use when:
+
+- authentication required
+- validation needed
+- logging / filtering required
+- complex execution flow needed
+
+---
+
+## TCP / TLS Support
+
+- TCP → `TcpServerBase<TActor>`
+- TLS → `TlsServerBase<TActor>`
+
+Usage is identical except transport layer.
 
 ---
 
 ## Summary
 
-Use pipeline only when you need control over execution flow.
+- Actor → business logic  
+- ActorSystem → execution  
+- Server → network entry point  
+- Decoder → packet parsing  
+- Serializer → packet writing  
+- Mapper → protocol resolution  
 
-For most cases, the direct message model is simpler and sufficient.
+---
