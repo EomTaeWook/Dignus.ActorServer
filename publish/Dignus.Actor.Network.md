@@ -292,7 +292,6 @@ Message Throughput: 15,329,728 msg/s
 - Server port: 5000
 - Protocol: TLS over TCP
 - Working clients: 1
-- In-flight messages per client: 1000
 - Message size: 32 bytes
 - Benchmark duration: 10 seconds
 
