@@ -239,6 +239,16 @@ Send Response
 
 ---
 
+### Test Conditions
+
+- Server address: 127.0.0.1
+- Server port: 5000
+- Protocol: Plain TCP (no TLS)
+- Working clients: 1
+- In-flight messages per client: 1000
+- Message size: 32 bytes
+- Benchmark duration: 10 seconds
+
 ### Round-Trip (TCP)
 
 ```text
@@ -252,6 +262,15 @@ Message Throughput: 13,634,960 msg/s
 ```
 
 ---
+
+### Test Conditions
+
+- Server address: 127.0.0.1
+- Server port: 5000
+- Protocol: Plain TCP (no TLS)
+- Working clients: 100
+- Message size: 32 bytes
+- Benchmark duration: 10 seconds
 
 ### Fan-out (100 clients)
 
@@ -267,6 +286,16 @@ Message Throughput: 15,329,728 msg/s
 
 ---
 
+### Test Conditions
+
+- Server address: 127.0.0.1
+- Server port: 5000
+- Protocol: TLS over TCP
+- Working clients: 1
+- In-flight messages per client: 1000
+- Message size: 32 bytes
+- Benchmark duration: 10 seconds
+
 ### TLS Round-Trip
 
 ```text
@@ -280,6 +309,15 @@ Message Throughput: 11,023,486 msg/s
 ```
 
 ---
+
+### Test Conditions
+
+- Server address: 127.0.0.1
+- Server port: 5000
+- Protocol: TLS over TCP
+- Working clients: 100
+- Message size: 32 bytes
+- Benchmark duration: 10 seconds
 
 ### TLS Fan-out (100 clients)
 
