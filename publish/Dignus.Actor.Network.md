@@ -55,7 +55,7 @@ var serverOptions = ServerOptions.Builder()
     .UseSerializer(new MessageSerializer())
     .Build();
 
-var actorSystem = serviceProvider.GetService<ActorSystem>();
+var actorSystem = new ActorSystem();
 
 var lobby = new LobbyServer(actorSystem, serverOptions, serviceProvider);
 lobby.Start(30000);
