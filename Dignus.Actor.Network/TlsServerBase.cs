@@ -190,8 +190,7 @@ namespace Dignus.Actor.Network
         }
         bool IActorRefProvider.TryGetActorRef(string alias, out IActorRef actorRef)
         {
-            actorRef = null;
-            return false;
+            return _actorSystem.TryGetActorRef(alias, out actorRef);
         }
         void IActorTlsHostHandler.OnHandshakeFailed(ISession session, Exception ex)
         {

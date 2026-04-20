@@ -108,8 +108,7 @@ namespace Dignus.Actor.Network
 
         bool IActorRefProvider.TryGetActorRef(string alias, out IActorRef actorRef)
         {
-            actorRef = null;
-            return false;
+            return _actorSystem.TryGetActorRef(alias, out actorRef);
         }
 
         void IActorHostHandler.OnAccepted(ISession session)
