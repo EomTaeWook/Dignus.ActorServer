@@ -19,14 +19,14 @@ namespace Dignus.Actor.Core.Dispatcher
 
         private readonly int _dispatcherId;
 
-        private readonly SynchronizedArrayQueue<IActorSchedulable> _scheduledActors = [];
+        private readonly SynchronizedArrayQueue<IActorSchedulable> _scheduledActors = new SynchronizedArrayQueue<IActorSchedulable>();
 
-        private readonly ActorYieldTaskPool _yieldTaskPool = new();
+        private readonly ActorYieldTaskPool _yieldTaskPool = new ActorYieldTaskPool();
         private volatile bool _isStopped;
         private readonly DispatcherSynchronizationContext _synchronizationContext;
         private readonly Thread _workerThread;
 
-        private readonly SemaphoreSlim _signal = new(0, int.MaxValue);
+        private readonly SemaphoreSlim _signal = new SemaphoreSlim(0, int.MaxValue);
         private int _signalPending = 0;
 
         public ActorDispatcher(int dispatcherId)

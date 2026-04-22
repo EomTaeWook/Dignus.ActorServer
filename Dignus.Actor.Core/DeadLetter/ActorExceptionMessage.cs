@@ -7,7 +7,13 @@ using System;
 
 namespace Dignus.Actor.Core.DeadLetter
 {
-    public record ActorExceptionMessage(Exception Exception) : IActorMessage
+    public class ActorExceptionMessage : IActorMessage
     {
+        public Exception Exception { get; }
+
+        public ActorExceptionMessage(Exception exception)
+        {
+            Exception = exception;
+        }
     }
 }

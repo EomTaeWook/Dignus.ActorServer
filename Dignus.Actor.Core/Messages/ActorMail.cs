@@ -6,9 +6,14 @@ using Dignus.Actor.Abstractions;
 
 namespace Dignus.Actor.Core.Messages
 {
-    public readonly struct ActorMail(IActorMessage Message, IActorRef Sender)
+    public readonly struct ActorMail
     {
-        public readonly IActorMessage Message = Message;
-        public readonly IActorRef Sender = Sender;
+        public readonly IActorMessage Message { get; }
+        public readonly IActorRef Sender { get;}
+        public ActorMail(IActorMessage message, IActorRef sender)
+        {
+            Message = message;
+            Sender = sender;
+        }
     }
 }

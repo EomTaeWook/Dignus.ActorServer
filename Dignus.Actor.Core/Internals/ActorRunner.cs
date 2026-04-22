@@ -13,12 +13,7 @@ using System.Threading.Tasks;
 
 namespace Dignus.Actor.Core.Internals
 {
-    internal class ActorRunner(ActorBase actor,
-        ActorDispatcher dispatcher,
-        int mailboxCapacity,
-        IDeadLetterPublisher deadLetterPublisher,
-        Action<int> onFinalize
-        ) : IActorSchedulable
+    internal class ActorRunner : IActorSchedulable
     {
         internal static void ContinuationAction(Task completedTask, object state)
         {
@@ -36,23 +31,36 @@ namespace Dignus.Actor.Core.Internals
             Volatile.Write(ref runner._pendingReceiveTask, null);
             runner._dispatcher.Schedule(runner);
         }
-        private readonly ActorBase _actor = actor;
-        private readonly IDeadLetterPublisher _deadLetterPublisher = deadLetterPublisher;
-        private readonly ActorDispatcher _dispatcher = dispatcher;
-        private readonly Action<int> _onFinalize = onFinalize;
-        private readonly MpscBoundedQueue<ActorMail> _mailbox = new(mailboxCapacity);
+        private readonly ActorBase _actor;
+        private readonly ActorDispatcher _dispatcher;
+        private readonly IDeadLetterPublisher _deadLetterPublisher;
+        private readonly Action<long> _onFinalize;
+        private readonly MpscBoundedQueue<ActorMail> _mailbox;
 
         private int _isScheduled;
         private int _lifecycleState = 0;
         private Task _pendingReceiveTask;
 
+        public ActorRunner(ActorBase actor,
+            ActorDispatcher dispatcher,
+            int mailboxCapacity,
+            IDeadLetterPublisher deadLetterPublisher,
+            Action<long> onFinalize)
+        {
+            _actor = actor;
+            _dispatcher = dispatcher;
+            _mailbox = new MpscBoundedQueue<ActorMail>(mailboxCapacity);
+            _deadLetterPublisher = deadLetterPublisher;
+            _onFinalize = onFinalize;
+
+        }
         public ActorBase GetActor()
         {
             return _actor;
         }
         public EnqueueResult Enqueue(IActorMessage message, IActorRef sender)
         {
-            ActorMail actorMail = new(message, sender);
+            ActorMail actorMail = new ActorMail(message, sender);
             return Enqueue(actorMail);
         }
         public EnqueueResult Enqueue(in ActorMail actorMail)
@@ -101,8 +109,7 @@ namespace Dignus.Actor.Core.Internals
                 ValueTask valueTask;
                 try
                 {
-                    valueTask = _actor.OnReceiveInternal(actorMail.Message,
-                    actorMail.Sender);
+                    valueTask = _actor.OnReceiveInternal(actorMail.Message, actorMail.Sender);
                 }
                 catch(OperationCanceledException)
                 {

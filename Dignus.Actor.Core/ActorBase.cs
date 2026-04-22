@@ -30,13 +30,11 @@ namespace Dignus.Actor.Core
         {
             return OnReceive(message, sender);
         }
-
         internal void Initialize(ActorDispatcher actorDispatcher, ActorRef actorRef)
         {
             Dispatcher = actorDispatcher;
             SelfActorRef = actorRef;
         }
-
         public void Post(IActorRef targetRef, IActorMessage message)
         {
             targetRef.Post(message, Self);
@@ -50,6 +48,7 @@ namespace Dignus.Actor.Core
             {
                 throw new InvalidOperationException($"Actor is running outside its dispatcher context. Expected Dispatcher-{Dispatcher.Id}");
             }
+
             if (actorDispatcher.Id != Dispatcher.Id)
             {
                 throw new InvalidOperationException($"Actor Dispatcher-{Dispatcher.Id} vs Current Dispatcher-{actorDispatcher.Id}");

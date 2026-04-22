@@ -6,11 +6,16 @@ using System.Threading;
 
 namespace Dignus.Actor.Core.Dispatcher
 {
-    internal sealed class DispatcherSynchronizationContext(ActorDispatcher actorDispatcher) : SynchronizationContext
+    internal sealed class DispatcherSynchronizationContext : SynchronizationContext
     {
+        private readonly ActorDispatcher _actorDispatcher;
+        public DispatcherSynchronizationContext(ActorDispatcher actorDispatcher)
+        {
+            _actorDispatcher = actorDispatcher;
+        }
         public override void Post(SendOrPostCallback sendOrPostCallback, object state)
         {
-            actorDispatcher.EnqueueContinuation(sendOrPostCallback, state);
+            _actorDispatcher.EnqueueContinuation(sendOrPostCallback, state);
         }
     }
 }

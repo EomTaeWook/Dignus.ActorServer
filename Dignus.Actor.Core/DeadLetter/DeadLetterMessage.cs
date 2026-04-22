@@ -7,16 +7,23 @@ using System;
 
 namespace Dignus.Actor.Core.DeadLetter
 {
-    public class DeadLetterMessage(
-        IActorMessage message,
-        IActorRef sender,
-        int recipientActorId,
-        DeadLetterReason reason) : IActorMessage
+    public class DeadLetterMessage: IActorMessage
     {
-        public IActorMessage Message { get; } = message;
-        public IActorRef Sender { get; } = sender;
-        public int RecipientActorId { get; } = recipientActorId;
+        public IActorMessage Message { get; }
+        public IActorRef Sender { get; }
+        public long RecipientActorId { get; }
         public DateTime DetectedTimestamp { get; } = DateTime.UtcNow;
-        public DeadLetterReason Reason { get; } = reason;
+        public DeadLetterReason Reason { get; }
+
+        public DeadLetterMessage(IActorMessage message,
+            IActorRef sender,
+            long recipientActorId,
+            DeadLetterReason reason)
+        {
+            Message = message;
+            Sender = sender;
+            RecipientActorId = recipientActorId;
+            Reason = reason;
+        }
     }
 }

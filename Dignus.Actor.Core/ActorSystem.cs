@@ -22,10 +22,10 @@ namespace Dignus.Actor.Core
         const int DefaultMailboxCapacity = 1024;
         public int DispatcherCount => _dispatchers.Length;
 
-        private readonly ConcurrentDictionary<long, ActorRunner> _actorRunners = new();
-        private readonly ConcurrentDictionary<string, long> _aliasToId = new();
+        private readonly ConcurrentDictionary<long, ActorRunner> _actorRunners = new ConcurrentDictionary<long, ActorRunner>();
+        private readonly ConcurrentDictionary<string, long> _aliasToId = new ConcurrentDictionary<string, long>();
         private readonly ActorDispatcher[] _dispatchers;
-        private int _nextActorId;
+        private long _nextActorId;
         private int _isDisposed;
 
         [InjectConstructor]
@@ -52,21 +52,6 @@ namespace Dignus.Actor.Core
         {
             return SpawnWithDispatcher(factory(), dispatcherIndex, alias, mailboxCapacity).Self;
         }
-        internal TActor SpawnWithDispatcher<TActor>(TActor actor, int dispatcherIndex, string alias, int mailboxCapacity) 
-            where TActor : ActorBase
-        {
-            ThrowIfDisposed();
-
-            if ((uint)dispatcherIndex >= (uint)_dispatchers.Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(dispatcherIndex));
-            }
-
-            int actorId = Interlocked.Increment(ref _nextActorId);
-            ActorDispatcher actorDispatcher = _dispatchers[dispatcherIndex];
-            return RegisterActor(actor, actorId, actorDispatcher, alias, mailboxCapacity);
-        }
-
         public IActorRef Spawn<TActor>(string alias = null, int mailboxCapacity = DefaultMailboxCapacity) 
             where TActor : ActorBase, new()
         {
@@ -78,14 +63,29 @@ namespace Dignus.Actor.Core
         {
             return SpawnWithAutoDispatcher(factory(), alias, mailboxCapacity).Self;
         }
+        internal TActor SpawnWithDispatcher<TActor>(TActor actor, int dispatcherIndex, string alias, int mailboxCapacity)
+            where TActor : ActorBase
+        {
+            ThrowIfDisposed();
+
+            if ((uint)dispatcherIndex >= (uint)_dispatchers.Length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(dispatcherIndex));
+            }
+
+            var actorId = Interlocked.Increment(ref _nextActorId);
+            ActorDispatcher actorDispatcher = _dispatchers[dispatcherIndex];
+            return RegisterActor(actor, actorId, actorDispatcher, alias, mailboxCapacity);
+        }
 
         internal TActor SpawnWithAutoDispatcher<TActor>(TActor actor, string alias, int mailboxCapacity) where TActor : ActorBase
         {
             ThrowIfDisposed();
 
-            int actorId = Interlocked.Increment(ref _nextActorId);
-            int dispatcherIndex = actorId % _dispatchers.Length;
+            var actorId = Interlocked.Increment(ref _nextActorId);
+            var dispatcherIndex = actorId % _dispatchers.Length;
             var dispatcher = _dispatchers[dispatcherIndex];
+
             return RegisterActor(actor, actorId, dispatcher, alias, mailboxCapacity);
         }
         private void ThrowIfDisposed()
@@ -95,7 +95,7 @@ namespace Dignus.Actor.Core
                 throw new ObjectDisposedException(nameof(ActorSystem));
             }
         }
-        private TActor RegisterActor<TActor>(TActor actor, int actorId, ActorDispatcher actorDispatcher, string alias, int mailboxCapacity)
+        private TActor RegisterActor<TActor>(TActor actor, long actorId, ActorDispatcher actorDispatcher, string alias, int mailboxCapacity)
             where TActor : ActorBase
         {
             var actorRunner = new ActorRunner(actor, actorDispatcher, mailboxCapacity, this, FinalizeKill);
@@ -126,7 +126,7 @@ namespace Dignus.Actor.Core
 
             return actor;
         }
-        internal void Post(int actorId, in ActorMail actorMail)
+        internal void Post(long actorId, in ActorMail actorMail)
         {
             if (_isDisposed == 1)
             {
@@ -145,6 +145,7 @@ namespace Dignus.Actor.Core
             {
                 return;
             }
+
             switch (result)
             {
                 case EnqueueResult.MailboxFull:
@@ -155,51 +156,51 @@ namespace Dignus.Actor.Core
                     break;
             }
         }
-        internal void Post(int actorId, IActorMessage message, IActorRef sender)
+        internal void Post(long actorId, IActorMessage message, IActorRef sender)
         {
             Post(actorId, new ActorMail(message, sender));
         }
-        internal void Kill(int actorId)
+        internal void Kill(long actorId)
         {
             if (_actorRunners.TryGetValue(actorId, out var actorRunner))
             {
                 actorRunner.Kill();
             }
         }
-        internal void FinalizeKill(int actorId)
+        internal void FinalizeKill(long actorId)
         {
             if(_actorRunners.TryRemove(actorId, out var actorRunner))
             {
                 var actor = actorRunner.GetActor();
 
-                if(!string.IsNullOrEmpty(actor.SelfActorRef.Alias))
+                if(string.IsNullOrEmpty(actor.SelfActorRef.Alias) == false)
                 {
                     _aliasToId.TryRemove(actor.SelfActorRef.Alias, out _);
                 }
             }
         }
 
-        bool IActorRefProvider.TryGetActorRef(long id, out IActorRef actorRef)
+        bool IActorRefProvider.TryGetActorRef(long actorId, out IActorRef actorRef)
         {
-            return TryGetActorRef(id, out actorRef);
+            return TryGetActorRef(actorId, out actorRef);
         }
-        internal bool TryGetActorRef(long id, out IActorRef actorRef)
+
+        internal bool TryGetActorRef(long actorId, out IActorRef actorRef)
         {
             actorRef = null;
-            if (_actorRunners.TryGetValue(id, out var actorRunner))
+            if (_actorRunners.TryGetValue(actorId, out var actorRunner))
             {
                 actorRef = actorRunner.GetActor().Self;
                 return true;
             }
             return false;
         }
-
         public bool TryGetActorRef(string alias, out IActorRef actorRef)
         {
             actorRef = null;
-            if (_aliasToId.TryGetValue(alias, out long id))
+            if (_aliasToId.TryGetValue(alias, out long actorId))
             {
-                return TryGetActorRef(id, out actorRef);
+                return TryGetActorRef(actorId, out actorRef);
             }
             return false;
         }
@@ -207,7 +208,7 @@ namespace Dignus.Actor.Core
         {
             PublishDeadLetter(deadLetterMessage);
         }
-        internal void PublishDeadLetter(IActorMessage message, IActorRef sender, int recipientActorId, DeadLetterReason reason)
+        internal void PublishDeadLetter(IActorMessage message, IActorRef sender, long recipientActorId, DeadLetterReason reason)
         {
             PublishDeadLetter(new DeadLetterMessage(message, sender, recipientActorId, reason));
         }
@@ -229,7 +230,7 @@ namespace Dignus.Actor.Core
                 actor.Kill();
             }
 
-            while (!_actorRunners.IsEmpty)
+            while (_actorRunners.IsEmpty == false)
             {
                 Thread.Yield();
             }

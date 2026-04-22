@@ -8,24 +8,38 @@ using System;
 
 namespace Dignus.Actor.Core.Internals
 {
-    internal class ActorRef(ActorSystem actorSystem, int id, string alias) : IActorRef
+    internal class ActorRef : IActorRef
     {
-        public int Id { get => id; }
-        public string Alias { get => alias; }
+        public long Id { get => _id; }
+        public string Alias { get => _alias; }
+
+        private readonly ActorSystem _actorSystem;
+        private readonly long _id;
+        private readonly string _alias;
+
+        public ActorRef(ActorSystem actorSystem, long id, string alias)
+        {
+            _actorSystem = actorSystem;
+            _id = id;
+            _alias = alias;
+        }
 
         public void Post(IActorMessage message, IActorRef sender)
         {
-            ArgumentNullException.ThrowIfNull(message);
-            actorSystem.Post(id, message, sender);
+            if(message == null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+            _actorSystem.Post(_id, message, sender);
         }
         public void Post(in ActorMail actorMail)
         {
-            actorSystem.Post(id, in actorMail);
+            _actorSystem.Post(_id, in actorMail);
         }
 
         public void Kill()
         {
-            actorSystem.Kill(id);
+            _actorSystem.Kill(_id);
         }
     }
 }

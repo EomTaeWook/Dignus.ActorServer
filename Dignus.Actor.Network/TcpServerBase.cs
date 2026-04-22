@@ -48,7 +48,7 @@ namespace Dignus.Actor.Network
 
             if (options.Network.MailboxCapacity <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(options),
+                throw new ArgumentOutOfRangeException(nameof(options), 
                     options.Network.MailboxCapacity,
                     "options.Network.MailboxCapacity must be greater than 0.");
             }
@@ -152,7 +152,6 @@ namespace Dignus.Actor.Network
                 sessionActor.SelfActorRef.Kill();
             }
         }
-
         public void Start(string ip, int port, int backlog)
         {
             _actorTcpHost.Start(ip, port, backlog);
