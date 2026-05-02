@@ -228,7 +228,7 @@ Use `Post` for fire-and-forget messages.
 Use `Ask` only when a result is required.
 
 ```csharp
-CreateRoomResponse response = await actorRef.Ask<CreateRoomResponse>(
+CreateRoomResponse response = await actorRef.AskAsync<CreateRoomResponse>(
     new CreateRoomRequest(),
     3000);
 ```

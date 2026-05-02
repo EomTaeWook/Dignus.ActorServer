@@ -42,7 +42,7 @@ namespace Dignus.Actor.Core.Internals
         {
             _actorSystem.Kill(_id);
         }
-        public Task<TResponse> Ask<TResponse>(IActorMessage message, int timeoutMilliseconds) where TResponse : IActorMessage
+        public Task<TResponse> AskAsync<TResponse>(IActorMessage message, int timeoutMilliseconds) where TResponse : IActorMessage
         {
             if (message == null)
             {

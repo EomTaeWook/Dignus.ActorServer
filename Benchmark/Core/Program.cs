@@ -197,7 +197,7 @@ internal class Program
                 {
                     while (isRunning())
                     {
-                        var response = await askActorRef.Ask<AskPongMessage>(
+                        var response = await askActorRef.AskAsync<AskPongMessage>(
                             new AskPingMessage(),
                             3000);
 
