@@ -10,19 +10,18 @@ using System.Threading.Tasks;
 
 namespace Dignus.Actor.Core
 {
-    public abstract class ActorBase 
+    public abstract class ActorBase
     {
         protected abstract ValueTask OnReceive(IActorMessage message, IActorRef sender);
         protected virtual void OnKill()
         {
         }
-
         internal virtual void KillInternal()
         {
             OnKill();
         }
-        public IActorRef Self => SelfActorRef;
 
+        public IAskActorRef Self => SelfActorRef;
         internal ActorDispatcher Dispatcher { get; private set; }
         internal ActorRef SelfActorRef { get; private set; }
 
@@ -35,11 +34,10 @@ namespace Dignus.Actor.Core
             Dispatcher = actorDispatcher;
             SelfActorRef = actorRef;
         }
-        public void Post(IActorRef targetRef, IActorMessage message)
+        protected void Post(IActorRef targetRef, IActorMessage message)
         {
             targetRef.Post(message, Self);
         }
-
         public void VerifyContext()
         {
             ActorDispatcher actorDispatcher = ActorDispatcher.CurrentActorDispatcher;

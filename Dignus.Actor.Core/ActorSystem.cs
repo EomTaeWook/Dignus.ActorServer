@@ -21,7 +21,9 @@ namespace Dignus.Actor.Core
 
         const int DefaultMailboxCapacity = 1024;
         public int DispatcherCount => _dispatchers.Length;
+        internal AskSystem AskSystem => _askSystem;
 
+        internal AskSystem _askSystem = new AskSystem();
         private readonly ConcurrentDictionary<long, ActorRunner> _actorRunners = new ConcurrentDictionary<long, ActorRunner>();
         private readonly ConcurrentDictionary<string, long> _aliasToId = new ConcurrentDictionary<string, long>();
         private readonly ActorDispatcher[] _dispatchers;
@@ -41,24 +43,24 @@ namespace Dignus.Actor.Core
                 _dispatchers[i].Start();
             }
         }
-        public IActorRef SpawnOnDispatcher<TActor>(int dispatcherIndex, string alias = null, int mailboxCapacity = DefaultMailboxCapacity) 
+        public IAskActorRef SpawnOnDispatcher<TActor>(int dispatcherIndex, string alias = null, int mailboxCapacity = DefaultMailboxCapacity) 
             where TActor : ActorBase, new()
         {
             return SpawnWithDispatcher(new TActor(), dispatcherIndex, alias, mailboxCapacity).Self;
         }
 
-        public IActorRef SpawnOnDispatcher<TActor>(Func<TActor> factory, int dispatcherIndex, string alias = null, int mailboxCapacity = DefaultMailboxCapacity) 
+        public IAskActorRef SpawnOnDispatcher<TActor>(Func<TActor> factory, int dispatcherIndex, string alias = null, int mailboxCapacity = DefaultMailboxCapacity) 
             where TActor : ActorBase
         {
             return SpawnWithDispatcher(factory(), dispatcherIndex, alias, mailboxCapacity).Self;
         }
-        public IActorRef Spawn<TActor>(string alias = null, int mailboxCapacity = DefaultMailboxCapacity) 
+        public IAskActorRef Spawn<TActor>(string alias = null, int mailboxCapacity = DefaultMailboxCapacity) 
             where TActor : ActorBase, new()
         {
             return SpawnWithAutoDispatcher(new TActor(), alias, mailboxCapacity).Self;
         }
 
-        public IActorRef Spawn<TActor>(Func<TActor> factory, string alias = null, int mailboxCapacity = DefaultMailboxCapacity)
+        public IAskActorRef Spawn<TActor>(Func<TActor> factory, string alias = null, int mailboxCapacity = DefaultMailboxCapacity)
             where TActor : ActorBase
         {
             return SpawnWithAutoDispatcher(factory(), alias, mailboxCapacity).Self;
@@ -179,7 +181,6 @@ namespace Dignus.Actor.Core
                 }
             }
         }
-
         bool IActorRefProvider.TryGetActorRef(long actorId, out IActorRef actorRef)
         {
             return TryGetActorRef(actorId, out actorRef);

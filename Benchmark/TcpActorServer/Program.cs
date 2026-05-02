@@ -19,4 +19,3 @@ static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEv
 {
     LogHelper.Error(e.ExceptionObject as Exception);
 }
-

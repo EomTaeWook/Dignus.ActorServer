@@ -5,10 +5,11 @@
 using Dignus.Actor.Abstractions;
 using Dignus.Actor.Core.Messages;
 using System;
+using System.Threading.Tasks;
 
 namespace Dignus.Actor.Core.Internals
 {
-    internal class ActorRef : IActorRef
+    internal class ActorRef : IAskActorRef
     {
         public long Id { get => _id; }
         public string Alias { get => _alias; }
@@ -40,6 +41,23 @@ namespace Dignus.Actor.Core.Internals
         public void Kill()
         {
             _actorSystem.Kill(_id);
+        }
+        public Task<TResponse> Ask<TResponse>(IActorMessage message, int timeoutMilliseconds) where TResponse : IActorMessage
+        {
+            if (message == null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+
+            long requestId = _actorSystem.AskSystem.Register(
+                TimeSpan.FromMilliseconds(timeoutMilliseconds),
+                out Task<TResponse> responseTask);
+
+            var askReplyActorRef = new AskReplyActorRef(requestId, _actorSystem.AskSystem);
+
+            Post(message, askReplyActorRef);
+
+            return responseTask;
         }
     }
 }
