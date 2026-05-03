@@ -43,6 +43,51 @@ private static void RegisterProtocol(IServiceProvider serviceProvider)
 }
 ```
 
+### Register by Protocol Name
+
+If the protocol enum name and message body type name are the same,
+mappings can be registered automatically from an assembly.
+
+```csharp
+private static void RegisterProtocol(IServiceProvider serviceProvider)
+{
+    var mapper = serviceProvider.GetService<ProtocolBodyTypeMapper>();
+
+    mapper.RegisterByProtocolName<CLSProtocol>(typeof(CreateAccountReq).Assembly);
+}
+```
+
+For multiple assemblies:
+
+```csharp
+private static void RegisterProtocol(IServiceProvider serviceProvider, IEnumerable<Assembly> assemblies)
+{
+    var mapper = serviceProvider.GetService<ProtocolBodyTypeMapper>();
+
+    mapper.RegisterByProtocolName<CLSProtocol>(assemblies);
+}
+```
+
+This registers body types whose type name matches a protocol enum name.
+
+Example:
+
+```csharp
+public enum CLSProtocol
+{
+    CreateAccountReq = 1001,
+    LoginReq = 1002
+}
+
+public sealed class CreateAccountReq : IActorMessage
+{
+}
+
+public sealed class LoginReq : IActorMessage
+{
+}
+```
+
 ---
 
 ## 2. Server Setup
