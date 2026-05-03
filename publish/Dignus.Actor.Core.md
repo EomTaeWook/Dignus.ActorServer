@@ -330,7 +330,7 @@ public sealed class RoomManagerActor : ActorBase
 ```
 
 ```csharp
-CreateRoomResponse response = await roomManagerActorRef.Ask<CreateRoomResponse>(
+CreateRoomResponse response = await roomManagerActorRef.AskAsync<CreateRoomResponse>(
     new CreateRoomRequest()
     {
         RoomNumber = 1
