@@ -24,7 +24,7 @@ It is designed around:
 
 ## Architecture
 
-```
+```text
 Application
    ↓
 Dignus.ActorServer (Network / Session / Protocol)
@@ -64,6 +64,8 @@ Includes:
 - Actor lifecycle
 - Message processing
 - `IActorRef`
+- `IAskActorRef`
+- Request/response messaging through Ask
 
 Does NOT include:
 
@@ -99,7 +101,7 @@ Includes:
 
 ## Network Flow
 
-```
+```text
 TCP / TLS
    ↓
 Packet Decode
@@ -119,7 +121,7 @@ Actor.OnReceive
 
 Dignus.ActorServer uses a **direct message model by default**.
 
-```
+```text
 Protocol → Deserialize → Actor
 ```
 
@@ -167,8 +169,9 @@ Use this framework when you need:
 
 ## Performance
 
-Network benchmarks are available here:
+Benchmarks:
 
+- [Dignus.Actor.Core Benchmark](publish/Dignus.Actor.Core.md)
 - [Dignus.Actor.Network Benchmark](publish/Dignus.Actor.Network.md)
 
 ---
