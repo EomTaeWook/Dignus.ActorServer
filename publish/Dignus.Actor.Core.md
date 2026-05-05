@@ -206,6 +206,12 @@ IAskActorRef actorRef = actorSystem.Spawn<SampleActor>(
 
 Actors communicate only through messages.
 
+`Post` sends a message to an actor without waiting for a response.
+
+The message is enqueued into the target actor mailbox and processed later by the actor dispatcher.
+
+Use `Post` when the caller does not need a return value.
+
 ```csharp
 actorRef.Post(new PingMessage());
 ```
@@ -218,14 +224,20 @@ public readonly struct PingMessage : IActorMessage
 }
 ```
 
+`Post` is fire-and-forget.
+
+The caller does not receive a result from the target actor, and the call only represents message delivery to the actor reference.
+
+If the target actor needs to send another message later, it should do so explicitly through another actor reference.
+
 ---
 
 ## Ask Request/Response
 
 `Ask` is used when the caller needs a response from an actor.
 
-Use `Post` for fire-and-forget messages.  
-Use `Ask` only when a result is required.
+Use `Post` for fire-and-forget messages when no response is needed.  
+Use `Ask` when the caller must wait for a response from the target actor.
 
 ```csharp
 CreateRoomResponse response = await actorRef.AskAsync<CreateRoomResponse>(
@@ -250,7 +262,7 @@ public sealed class CreateRoomResponse : IActorMessage
 }
 ```
 
-The actor receiving an Ask request should reply to `sender`.
+When handling an Ask request, the receiving actor should send the response message back to `sender`.
 
 ```csharp
 sender.Post(new CreateRoomResponse()
@@ -260,7 +272,9 @@ sender.Post(new CreateRoomResponse()
 }, Self);
 ```
 
-The Ask runtime internally tracks the request and completes the waiting task when the reply is posted to the Ask reply reference.
+The Ask runtime internally tracks the request and completes the waiting task when the response message is posted to the Ask reply reference.
+
+The response type must match the type requested by `AskAsync<TResponse>`.
 
 `Ask` is intended for control-flow operations such as:
 
@@ -270,6 +284,31 @@ The Ask runtime internally tracks the request and completes the waiting task whe
 - management requests
 
 Do not use `Ask` for high-frequency game-loop messages.
+
+---
+
+## Post vs Ask
+
+Use `Post` when the caller only needs to send a message.
+
+Use `Ask` when the caller needs to wait for a response.
+
+```text
+Post
+caller -> target actor mailbox
+caller continues immediately
+```
+
+```text
+Ask
+caller -> target actor mailbox
+caller waits for response task
+target actor -> sender.Post(response, Self)
+```
+
+In most actor flows, prefer `Post`.
+
+Use `Ask` only when the response is required for the next control-flow step.
 
 ---
 
