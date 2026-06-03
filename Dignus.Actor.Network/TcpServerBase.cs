@@ -15,7 +15,7 @@ using System.Net;
 
 namespace Dignus.Actor.Network
 {
-    public abstract class TcpServerBase<TSessionActor> : IActorHostHandler, IActorRefProvider
+    public abstract class TcpServerBase<TSessionActor> : IActorHostHandler, IActorRefResolver
         where TSessionActor : SessionActorBase
     {
         protected abstract TSessionActor CreateSessionActor();
@@ -105,7 +105,7 @@ namespace Dignus.Actor.Network
             return false;
         }
 
-        bool IActorRefProvider.TryGetActorRef(string alias, out IActorRef actorRef)
+        bool IActorRefResolver.TryGetActorRef(string alias, out IActorRef actorRef)
         {
             return _actorSystem.TryGetActorRef(alias, out actorRef);
         }

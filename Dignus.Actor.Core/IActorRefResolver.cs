@@ -3,7 +3,7 @@
 
 namespace Dignus.Actor.Core
 {
-    internal interface IActorRefProvider
+    internal interface IActorRefResolver
     {
         bool TryGetActorRef(long id, out IActorRef actorRef);
 

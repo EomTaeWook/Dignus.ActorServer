@@ -14,7 +14,7 @@ using System.Threading;
 
 namespace Dignus.Actor.Core
 {
-    public class ActorSystem : IActorRefProvider, IDeadLetterPublisher
+    public class ActorSystem : IActorRefResolver, IDeadLetterPublisher
     {
         public event Action<DeadLetterMessage> OnDeadLetterDetected;
 
@@ -180,7 +180,7 @@ namespace Dignus.Actor.Core
                 }
             }
         }
-        bool IActorRefProvider.TryGetActorRef(long actorId, out IActorRef actorRef)
+        bool IActorRefResolver.TryGetActorRef(long actorId, out IActorRef actorRef)
         {
             return TryGetActorRef(actorId, out actorRef);
         }

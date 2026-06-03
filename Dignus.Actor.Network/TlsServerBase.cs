@@ -17,8 +17,7 @@ using System.Security.Cryptography.X509Certificates;
 namespace Dignus.Actor.Network
 {
     public abstract class TlsServerBase<TSessionActor> 
-        : IActorTlsHostHandler, IActorRefProvider
-        where TSessionActor : SessionActorBase
+        : IActorTlsHostHandler, IActorRefResolver where TSessionActor : SessionActorBase
     {
         protected abstract TSessionActor CreateSessionActor();
         protected abstract void OnAccepted(INetworkSessionRef connectedSessionRef);
@@ -187,7 +186,7 @@ namespace Dignus.Actor.Network
             }
             return false;
         }
-        bool IActorRefProvider.TryGetActorRef(string alias, out IActorRef actorRef)
+        bool IActorRefResolver.TryGetActorRef(string alias, out IActorRef actorRef)
         {
             return _actorSystem.TryGetActorRef(alias, out actorRef);
         }
