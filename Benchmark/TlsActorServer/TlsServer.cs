@@ -21,6 +21,11 @@ namespace TlsActorServer
             return new EchoActor();
         }
 
+        protected override int GetRequestedDispatcherIndex()
+        {
+            return base.GetRequestedDispatcherIndex();
+        }
+
         protected override void OnAccepted(INetworkSessionRef connectedActorRef)
         {
             LogHelper.Info($"OnAccepted : {connectedActorRef}");

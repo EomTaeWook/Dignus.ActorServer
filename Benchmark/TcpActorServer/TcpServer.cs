@@ -20,7 +20,7 @@ namespace TcpActorServer
         }
         protected override int GetRequestedDispatcherIndex()
         {
-            return 1;
+            return base.GetRequestedDispatcherIndex();
         }
 
         protected override void OnAccepted(INetworkSessionRef connectedActorRef)
