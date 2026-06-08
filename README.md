@@ -167,6 +167,24 @@ Use this framework when you need:
 
 ---
 
+## Send vs SendAsync
+
+`Dignus.ActorServer` provides both synchronous and asynchronous send paths.
+
+Both APIs use the same internal send path, so message ordering and send consistency are preserved in the same way.
+
+The difference is how the send loop is executed.
+
+When called from actor execution, `Send` executes the send loop directly on the actor dispatcher thread.
+`SendAsync` schedules the send loop to the ThreadPool through `Task.Run`.
+
+Because of this, `SendAsync` can move send work away from the actor thread, but it can also introduce additional scheduling overhead, allocation, and GC pressure compared with `Send`.
+
+Use `Send` when the actor thread is allowed to execute the send loop directly.
+Use `SendAsync` when the send loop should be offloaded to the ThreadPool.
+
+---
+
 ## Performance
 
 Benchmarks:
