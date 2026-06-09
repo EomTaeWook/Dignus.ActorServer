@@ -7,6 +7,7 @@ using Dignus.Actor.Core.Dispatcher;
 using Dignus.Actor.Core.Messages;
 using Dignus.Collections;
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,31 +15,18 @@ namespace Dignus.Actor.Core.Internals
 {
     internal class ActorRunner : IActorSchedulable
     {
-        internal static void ContinuationAction(Task completedTask, object state)
-        {
-            var runner = (ActorRunner)state;
-
-            if (completedTask.IsFaulted)
-            {
-                runner.Kill();
-                if (completedTask.Exception != null)
-                {
-                    runner.PublishExecutionException(completedTask.Exception);
-                }
-            }
-
-            Volatile.Write(ref runner._pendingReceiveTask, null);
-            runner._dispatcher.Schedule(runner);
-        }
         private readonly ActorBase _actor;
         private readonly ActorDispatcher _dispatcher;
         private readonly IDeadLetterPublisher _deadLetterPublisher;
         private readonly Action<long> _onFinalize;
         private readonly MpscBoundedQueue<ActorMail> _mailbox;
+        private readonly Action _receiveCompletedDelegate;
 
         private int _isScheduled;
         private int _lifecycleState = 0;
-        private Task _pendingReceiveTask;
+
+        private int _hasPendingReceive;
+        private TaskAwaiter _pendingAwaiter;
 
         public ActorRunner(ActorBase actor,
             ActorDispatcher dispatcher,
@@ -51,6 +39,7 @@ namespace Dignus.Actor.Core.Internals
             _mailbox = new MpscBoundedQueue<ActorMail>(mailboxCapacity);
             _deadLetterPublisher = deadLetterPublisher;
             _onFinalize = onFinalize;
+            _receiveCompletedDelegate = OnReceiveCompleted;
 
         }
         public ActorBase GetActor()
@@ -93,9 +82,9 @@ namespace Dignus.Actor.Core.Internals
         }
         public void Execute()
         {
-            if (Volatile.Read(ref _pendingReceiveTask) != null)
+            if (Volatile.Read(ref _hasPendingReceive) != 0)
             {
-                return;
+                return; 
             }
 
             while (_mailbox.TryDequeue(out ActorMail actorMail))
@@ -104,7 +93,6 @@ namespace Dignus.Actor.Core.Internals
                 {
                     break;
                 }
-
                 ValueTask valueTask;
                 try
                 {
@@ -123,28 +111,37 @@ namespace Dignus.Actor.Core.Internals
 
                 if (valueTask.IsCompleted)
                 {
-                    if(valueTask.IsFaulted)
+                    if (valueTask.IsFaulted)
                     {
-                        Kill();
-
                         var ex = valueTask.AsTask().Exception;
                         if (ex != null)
                         {
                             PublishExecutionException(ex);
                         }
+
+                        Kill();
                         break;
                     }
 
                     continue;
                 }
 
-                Task receiveTask = valueTask.AsTask();
-                Volatile.Write(ref _pendingReceiveTask, receiveTask);
-                receiveTask.ContinueWith(ContinuationAction,
-                    this,
-                    CancellationToken.None,
-                    TaskContinuationOptions.ExecuteSynchronously,
-                    TaskScheduler.Default);
+                _pendingAwaiter = valueTask.AsTask().GetAwaiter();
+                Volatile.Write(ref _hasPendingReceive, 1);
+
+                try
+                {
+                    _pendingAwaiter.UnsafeOnCompleted(_receiveCompletedDelegate);
+                }
+                catch (Exception ex)
+                {
+                    _pendingAwaiter = default;
+                    Volatile.Write(ref _hasPendingReceive, 0);
+
+                    Kill();
+                    PublishExecutionException(ex);
+                    break;
+                }
                 return;
             }
 
@@ -175,6 +172,27 @@ namespace Dignus.Actor.Core.Internals
             }
             _actor.KillInternal();
             _onFinalize(_actor.SelfActorRef.Id);
+        }
+        private void OnReceiveCompleted()
+        {
+            try
+            {
+                _pendingAwaiter.GetResult();
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                Kill();
+                PublishExecutionException(ex);
+            }
+            finally
+            {
+                _pendingAwaiter = default;
+                Volatile.Write(ref _hasPendingReceive, 0);
+                _dispatcher.Schedule(this);
+            }
         }
         private void PublishExecutionException(Exception ex)
         {
