@@ -8,6 +8,6 @@ namespace Dignus.Actor.Core
 {
     public interface IAskActorRef : IActorRef
     {
-        Task<TResponse> AskAsync<TResponse>(IActorMessage message, int timeoutMilliseconds) where TResponse : IActorMessage;
+        ValueTask<TResponse> AskAsync<TResponse>(IActorMessage message, int timeoutMilliseconds) where TResponse : IActorMessage;
     }
 }

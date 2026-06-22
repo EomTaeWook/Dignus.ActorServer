@@ -41,22 +41,18 @@ namespace Dignus.Actor.Core.Internals
         {
             _actorSystem.Kill(_id);
         }
-        public Task<TResponse> AskAsync<TResponse>(IActorMessage message, int timeoutMilliseconds) where TResponse : IActorMessage
+        public ValueTask<TResponse> AskAsync<TResponse>(IActorMessage message, int timeoutMilliseconds) where TResponse : IActorMessage
         {
             if (message == null)
             {
                 throw new ArgumentNullException(nameof(message));
             }
 
-            long requestId = _actorSystem.AskSystem.Register(
-                TimeSpan.FromMilliseconds(timeoutMilliseconds),
-                out Task<TResponse> responseTask);
-
-            var askReplyActorRef = new AskReplyActorRef(requestId, _actorSystem.AskSystem);
+            var askReplyActorRef = new AskReplyActorRef<TResponse>(TimeSpan.FromMilliseconds(timeoutMilliseconds), _actorSystem.AskSystem);
 
             Post(message, askReplyActorRef);
 
-            return responseTask;
+            return askReplyActorRef.ResponseTask;
         }
     }
 }

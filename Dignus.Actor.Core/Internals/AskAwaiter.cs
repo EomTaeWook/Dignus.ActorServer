@@ -3,61 +3,64 @@
 
 using Dignus.Actor.Abstractions;
 using System;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Sources;
 
 namespace Dignus.Actor.Core.Internals
 {
     internal interface IAskAwaiter : IDisposable
     {
+        long DeadlineAtTicks { get; }
         void SetResponse(IActorMessage responseMessage);
         void SetTimeout();
     }
 
-    internal sealed class AskAwaiter<TResponse> : IAskAwaiter
+    internal sealed class AskAwaiter<TResponse> : IAskAwaiter, IValueTaskSource<TResponse>
         where TResponse : IActorMessage
     {
-        public Task<TResponse> Task => _taskCompletionSource.Task;
+        public ValueTask<TResponse> ValueTask => new ValueTask<TResponse>(this, _valueTaskSource.Version);
 
-        private readonly long _requestId;
-        private readonly AskSystem _askSystem;
-        private readonly TaskCompletionSource<TResponse> _taskCompletionSource;
-        private readonly CancellationTokenSource _cancellationTokenSource;
+        public long DeadlineAtTicks => _deadlineAtTicks;
 
-        public AskAwaiter(long requestId, TimeSpan timeout, AskSystem askSystem)
+        private readonly long _deadlineAtTicks = 0;
+        private ManualResetValueTaskSourceCore<TResponse> _valueTaskSource;
+        public AskAwaiter(TimeSpan timeout)
         {
-            _requestId = requestId;
-            _askSystem = askSystem;
-            _taskCompletionSource = new TaskCompletionSource<TResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-            _cancellationTokenSource = new CancellationTokenSource(timeout);
-            _cancellationTokenSource.Token.Register(OnTimeout);
+            _deadlineAtTicks = DateTime.UtcNow.Add(timeout).Ticks;
+            _valueTaskSource.RunContinuationsAsynchronously = true;
         }
-
-        private void OnTimeout()
-        {
-            _askSystem.OnTimeout(_requestId);
-        }
-
         public void SetResponse(IActorMessage responseMessage)
         {
             if (responseMessage is TResponse response)
             {
-                _taskCompletionSource.TrySetResult(response);
+                _valueTaskSource.SetResult(response);
                 return;
             }
 
-            _taskCompletionSource.TrySetException(new InvalidOperationException($"Ask response type mismatch. expected:{typeof(TResponse).Name}, actual:{responseMessage.GetType().Name}"));
+            _valueTaskSource.SetException(new InvalidOperationException($"Ask response type mismatch. expected:{typeof(TResponse).Name}, actual:{responseMessage.GetType().Name}"));
         }
 
         public void SetTimeout()
         {
-            _taskCompletionSource.TrySetException(new TimeoutException());
+            _valueTaskSource.SetException(new TimeoutException());
         }
-
         public void Dispose()
         {
-            _cancellationTokenSource.Dispose();
+        }
+
+        public TResponse GetResult(short token)
+        {
+            return _valueTaskSource.GetResult(token);
+        }
+
+        public ValueTaskSourceStatus GetStatus(short token)
+        {
+            return _valueTaskSource.GetStatus(token);
+        }
+
+        public void OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
+        {
+            _valueTaskSource.OnCompleted(continuation, state, token, flags);
         }
     }
 }

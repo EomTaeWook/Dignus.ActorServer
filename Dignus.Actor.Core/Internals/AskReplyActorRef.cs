@@ -4,18 +4,23 @@
 using Dignus.Actor.Abstractions;
 using Dignus.Actor.Core.Messages;
 using System;
+using System.Threading.Tasks;
 
 namespace Dignus.Actor.Core.Internals
 {
-    internal class AskReplyActorRef : IActorRef
+    internal class AskReplyActorRef<TResponse> : IActorRef where TResponse : IActorMessage
     {
         private readonly long _requestId;
         private readonly AskSystem _askSystem;
 
-        public AskReplyActorRef(long requestId, AskSystem askSystem)
+        public ValueTask<TResponse> ResponseTask { get; }
+
+        public AskReplyActorRef(TimeSpan timeout, AskSystem askSystem)
         {
-            _requestId = requestId;
             _askSystem = askSystem;
+            _requestId = askSystem.Register(timeout, out ValueTask<TResponse> responseTask);
+
+            ResponseTask = responseTask;
         }
 
         public void Kill()
@@ -28,7 +33,6 @@ namespace Dignus.Actor.Core.Internals
             {
                 throw new ArgumentNullException(nameof(message));
             }
-
             _askSystem.TrySetResponse(_requestId, message);
         }
 
@@ -37,5 +41,4 @@ namespace Dignus.Actor.Core.Internals
             Post(actorMail.Message, actorMail.Sender);
         }
     }
-
 }

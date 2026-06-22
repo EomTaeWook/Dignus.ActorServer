@@ -239,6 +239,7 @@ namespace Dignus.Actor.Core
             {
                 dispatcher.Dispose();
             }
+            AskSystem.Dispose();
         }
     }
 }
