@@ -11,4 +11,7 @@ namespace Core.Messages
         public long RequestId { get; set; }
         public bool Ok { get; set; }
     }
+    internal sealed class StartAskLoopMessage : IActorMessage
+    {
+    }
 }

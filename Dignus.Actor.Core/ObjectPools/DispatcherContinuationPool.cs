@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 EomTaeWook
+// Copyright (c) 2026 EomTaeWook
 // Licensed under the MIT License. See LICENSE file in the project root.
 
 using Dignus.Actor.Core.Internals;
@@ -6,41 +6,41 @@ using Dignus.Framework;
 
 namespace Dignus.Actor.Core.ObjectPools
 {
-    internal class ActorYieldTaskPool
+    internal class DispatcherContinuationPool
     {
-        private class InnerPool : ObjectPoolBase<ActorYieldTask>
+        private class InnerPool : ObjectPoolBase<DispatcherContinuation>
         {
-            private readonly ActorYieldTaskPool _parentPool;
-            public InnerPool(ActorYieldTaskPool parentPool)
+            private readonly DispatcherContinuationPool _parentPool;
+            public InnerPool(DispatcherContinuationPool parentPool)
             {
                 _parentPool = parentPool;
             }
-            public override ActorYieldTask CreateItem()
+            public override DispatcherContinuation CreateItem()
             {
-                var item = new ActorYieldTask(_parentPool);
+                var item = new DispatcherContinuation(_parentPool);
                 return item;
             }
-            public override void Remove(ActorYieldTask item)
+            public override void Remove(DispatcherContinuation item)
             {
             }
         }
 
         private readonly InnerPool _innerPool;
 
-        public ActorYieldTaskPool()
+        public DispatcherContinuationPool()
         {
             _innerPool = new InnerPool(this);
         }
 
-        public ActorYieldTask Pop()
+        public DispatcherContinuation Pop()
         {
-            lock(_innerPool)
+            lock (_innerPool)
             {
                 return _innerPool.Pop();
             }
         }
 
-        public void Push(ActorYieldTask item)
+        public void Push(DispatcherContinuation item)
         {
             lock (_innerPool)
             {

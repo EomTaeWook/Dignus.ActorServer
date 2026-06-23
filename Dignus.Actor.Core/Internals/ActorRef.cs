@@ -48,11 +48,11 @@ namespace Dignus.Actor.Core.Internals
                 throw new ArgumentNullException(nameof(message));
             }
 
-            var askReplyActorRef = new AskReplyActorRef<TResponse>(TimeSpan.FromMilliseconds(timeoutMilliseconds), _actorSystem.AskSystem);
+            var askReplyActorRef = _actorSystem.AskSystem.Register<TResponse>(TimeSpan.FromMilliseconds(timeoutMilliseconds));
 
             Post(message, askReplyActorRef);
 
-            return askReplyActorRef.ResponseTask;
+            return askReplyActorRef.ValueTask;
         }
     }
 }

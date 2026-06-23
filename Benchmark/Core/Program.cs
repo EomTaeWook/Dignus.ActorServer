@@ -130,86 +130,48 @@ internal class Program
 
     private static async Task RunAskBenchmarkAsync()
     {
-        int actorCount = 32;
-        int pipelineSizePerActor = 1024;
+        int targetCount = 32;
+        int askersPerTarget = 1024;
         int benchmarkSeconds = 10;
 
         var actorSystem = new ActorSystem();
-        var askActorRefs = new List<IAskActorRef>(actorCount);
 
-        CreateAskActors(
-            actorSystem,
-            actorCount,
-            askActorRefs);
+        var targetRefs = new List<IAskActorRef>(targetCount);
+        for (int targetIndex = 0; targetIndex < targetCount; targetIndex++)
+        {
+            targetRefs.Add(actorSystem.Spawn(() => new AskBenchmarkActor(), mailboxCapacity: 4096)!);
+        }
 
-        long completedCount = 0;
-        bool isRunning = true;
+        var state = new AskBenchmarkState();
+
+        var askerRefs = new List<IAskActorRef>(targetCount * askersPerTarget);
+        foreach (var targetRef in targetRefs)
+        {
+            for (int askerIndex = 0; askerIndex < askersPerTarget; askerIndex++)
+            {
+                askerRefs.Add(actorSystem.Spawn(() => new AskLoopActor(targetRef, state), mailboxCapacity: 4)!);
+            }
+        }
 
         var stopwatch = Stopwatch.StartNew();
 
-        var tasks = CreateAskBenchmarkTasks(
-            askActorRefs,
-            pipelineSizePerActor,
-            () => Volatile.Read(ref isRunning),
-            () => Interlocked.Increment(ref completedCount));
+        foreach (var askerRef in askerRefs)
+        {
+            askerRef.Post(new StartAskLoopMessage(), null);
+        }
 
         await Task.Delay(benchmarkSeconds * 1000);
 
-        Volatile.Write(ref isRunning, false);
-
-        await Task.WhenAll(tasks);
-
+        state.Stop();
         stopwatch.Stop();
 
-        Console.WriteLine($"Actor Count: {actorCount:N0}");
-        Console.WriteLine($"Pipeline Size Per Actor: {pipelineSizePerActor:N0}");
+        long completedCount = state.CompletedCount;
+
+        Console.WriteLine($"Target Count: {targetCount:N0}");
+        Console.WriteLine($"Askers Per Target: {askersPerTarget:N0}");
         Console.WriteLine($"Completed Ask Count: {completedCount:N0}");
         Console.WriteLine($"Elapsed: {stopwatch.Elapsed.TotalSeconds:F3} sec");
         Console.WriteLine($"Throughput: {completedCount / stopwatch.Elapsed.TotalSeconds:N0} ask/s");
-    }
-
-    private static void CreateAskActors(
-        ActorSystem actorSystem,
-        int actorCount,
-        List<IAskActorRef> askActorRefs)
-    {
-        for (int actorIndex = 0; actorIndex < actorCount; actorIndex++)
-        {
-            var askBenchmarkActor = new AskBenchmarkActor();
-            var askBenchmarkActorRef = actorSystem.Spawn(() => askBenchmarkActor, mailboxCapacity: 4096);
-
-            askActorRefs.Add(askBenchmarkActorRef!);
-        }
-    }
-    private static List<Task> CreateAskBenchmarkTasks(
-        List<IAskActorRef> askActorRefs,
-        int pipelineSizePerActor,
-        Func<bool> isRunning,
-        Action addCompletedCount)
-    {
-        var tasks = new List<Task>();
-
-        foreach (var askActorRef in askActorRefs)
-        {
-            for (int pipelineIndex = 0; pipelineIndex < pipelineSizePerActor; pipelineIndex++)
-            {
-                tasks.Add(Task.Run(async () =>
-                {
-                    while (isRunning())
-                    {
-                        var response = await askActorRef.AskAsync<AskPongMessage>(
-                            new AskPingMessage(),
-                            3000);
-
-                        if (response.Ok)
-                        {
-                            addCompletedCount();
-                        }
-                    }
-                }));
-            }
-        }
-        return tasks;
     }
 
     private static void ActorSystem_OnDeadLetterDetected(Dignus.Actor.Core.DeadLetter.DeadLetterMessage deadLetterMessage)

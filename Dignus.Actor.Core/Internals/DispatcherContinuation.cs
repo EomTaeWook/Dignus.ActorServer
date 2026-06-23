@@ -6,13 +6,13 @@ using System.Threading;
 
 namespace Dignus.Actor.Core.Internals
 {
-    internal class ActorYieldTask : IActorSchedulable
+    internal class DispatcherContinuation : IActorSchedulable
     {
         private SendOrPostCallback _sendOrPostCallback;
         private object _state;
-        private readonly ActorYieldTaskPool _pool;
+        private readonly DispatcherContinuationPool _pool;
 
-        internal ActorYieldTask(ActorYieldTaskPool pool)
+        internal DispatcherContinuation(DispatcherContinuationPool pool)
         {
             _pool = pool;
         }
@@ -32,6 +32,7 @@ namespace Dignus.Actor.Core.Internals
         public void Execute()
         {
             _sendOrPostCallback?.Invoke(_state);
+
             Recycle();
         }
     }

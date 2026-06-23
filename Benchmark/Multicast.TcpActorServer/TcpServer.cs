@@ -1,5 +1,4 @@
-﻿using Dignus.Actor.Core;
-using Dignus.Actor.Core.DeadLetter;
+﻿using Dignus.Actor.Core.DeadLetter;
 using Dignus.Actor.Network;
 using Dignus.Actor.Network.Options;
 using Dignus.Log;

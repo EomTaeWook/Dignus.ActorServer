@@ -1,9 +1,4 @@
-﻿// Copyright (c) 2026 EomTaeWook
-// Licensed under the MIT License. See LICENSE file in the project root.
-
-
-using Dignus.Actor.Network.Messages;
-using System;
+﻿using Dignus.Actor.Network.Messages;
 
 namespace Multicast.TlsActorServer.Messages
 {

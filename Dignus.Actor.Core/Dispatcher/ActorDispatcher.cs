@@ -20,7 +20,7 @@ namespace Dignus.Actor.Core.Dispatcher
 
         private readonly SynchronizedArrayQueue<IActorSchedulable> _scheduledActors = new SynchronizedArrayQueue<IActorSchedulable>();
 
-        private readonly ActorYieldTaskPool _yieldTaskPool = new ActorYieldTaskPool();
+        private readonly DispatcherContinuationPool _dispatcherContinuationPool = new DispatcherContinuationPool();
         private volatile bool _isStopped;
         private readonly DispatcherSynchronizationContext _synchronizationContext;
         private readonly Thread _workerThread;
@@ -110,9 +110,9 @@ namespace Dignus.Actor.Core.Dispatcher
 
         internal void EnqueueContinuation(SendOrPostCallback sendOrPostCallback, object state)
         {
-            ActorYieldTask yieldTask = _yieldTaskPool.Pop();
-            yieldTask.Set(sendOrPostCallback, state);
-            Schedule(yieldTask);
+            DispatcherContinuation dispatcherContinuation = _dispatcherContinuationPool.Pop();
+            dispatcherContinuation.Set(sendOrPostCallback, state);
+            Schedule(dispatcherContinuation);
         }
     }
 }
