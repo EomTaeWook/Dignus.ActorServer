@@ -9,7 +9,7 @@ using System.Threading.Tasks.Sources;
 
 namespace Dignus.Actor.Core.Internals
 {
-    internal class AskReplyActorRef<TResponse> : IActorRef, IAskTimeout, IValueTaskSource<TResponse> 
+    internal sealed class AskReplyActorRef<TResponse> : IActorRef, IAskTimeout, IValueTaskSource<TResponse> 
         where TResponse : IActorMessage
     {
         public ValueTask<TResponse> ValueTask => new ValueTask<TResponse>(this, _valueTaskSourceCore.Version);
