@@ -10,19 +10,20 @@ Core actor runtime and messaging primitives for Dignus.
 
 `Dignus.Actor.Core` provides the fundamental runtime for actor-based execution.
 
-It implements a message-driven concurrency model where actors process messages sequentially on dedicated dispatcher threads.
+Actors process messages sequentially on dedicated dispatcher threads. Mutable state is owned by the actor that processes it, while actors communicate through messages.
 
-This package focuses purely on:
+This package focuses on:
 
 - execution
 - messaging
 - scheduling
+- actor lifecycle
 
 ---
 
 ## Scope
 
-`Dignus.Actor.Core` includes only the actor runtime.
+`Dignus.Actor.Core` contains the actor runtime only.
 
 Networking and server features are provided by:
 
@@ -32,11 +33,12 @@ Networking and server features are provided by:
 
 ## Design Goals
 
-- Single-threaded logical execution per actor
-- Message-driven concurrency model
-- No shared mutable state between actors
-- Deterministic scheduling via dispatcher
-- Lightweight and high-performance runtime
+- Sequential logical execution per actor
+- Message-driven concurrency
+- Isolated mutable actor state
+- Predictable actor-local execution
+- Low-overhead dispatcher scheduling
+- Lightweight, high-performance runtime
 - Request/response messaging through Ask
 
 ---
@@ -50,7 +52,9 @@ Responsible for:
 - creating and registering actors
 - routing messages to actor mailboxes
 - assigning actors to dispatchers
+- resolving actor references by alias
 - controlling actor lifecycle
+- publishing dead letters for undeliverable messages
 
 ---
 
@@ -60,8 +64,9 @@ Base class for all actors.
 
 - processes incoming messages
 - maintains actor-local state
-- executes on a single dispatcher thread
+- executes on its assigned dispatcher
 - exposes `Self` as an `IAskActorRef`
+- provides `VerifyContext()` for validating dispatcher affinity when needed
 
 ---
 
@@ -69,9 +74,9 @@ Base class for all actors.
 
 Marker interface for messages exchanged between actors.
 
-- represents a message that can be sent between actors
-- all actor communication is done through messages
-- has no behavior
+- represents a message sent between actors
+- carries application-defined data
+- has no required behavior
 
 ---
 
@@ -79,9 +84,10 @@ Marker interface for messages exchanged between actors.
 
 Reference to an actor.
 
-- used to send messages
-- hides the actual actor instance
-- enables safe communication
+- sends messages through `Post`
+- hides the actor instance
+- supports actor termination through `Kill`
+- enables message-based communication without direct actor access
 
 ---
 
@@ -91,8 +97,8 @@ Reference to an actor that supports request/response messaging.
 
 - extends `IActorRef`
 - sends Ask request messages
-- waits for a response message
-- intended for low-frequency request/response flows
+- provides an awaitable response operation
+- is intended for low-frequency request/response flows
 
 ---
 
@@ -100,21 +106,23 @@ Reference to an actor that supports request/response messaging.
 
 Execution unit of the actor system.
 
-- owns a dedicated thread
+- owns a dedicated worker thread
 - schedules actor execution
-- ensures sequential processing per actor
-- resumes async continuations on the same thread
+- ensures an actor is not executed concurrently
+- runs continuations that capture the dispatcher synchronization context on the dispatcher thread
+
+Continuations that explicitly avoid the captured context, such as with `ConfigureAwait(false)`, are not guaranteed to resume on the actor dispatcher thread.
 
 ---
 
 ## Concurrency Model
 
-- each actor processes messages sequentially
-- no concurrent execution inside a single actor
-- no shared state between actors
-- communication only through messages
+- each actor processes one message at a time
+- an actor does not execute concurrently with itself
+- mutable actor state remains isolated to that actor's execution
+- actor-to-actor communication is performed through messages
 
-This keeps actor logic simple and predictable.
+This keeps actor logic focused on local state and makes execution behavior easier to reason about.
 
 ---
 
@@ -142,11 +150,11 @@ This will:
 
 - create the actor
 - assign a unique actor id
-- automatically select a dispatcher
+- select a dispatcher automatically
 - register the actor
 - return an `IAskActorRef`
 
-Dispatcher selection is based on:
+Automatic dispatcher selection is based on:
 
 ```text
 dispatcherIndex = actorId % dispatcherCount
@@ -160,7 +168,7 @@ dispatcherIndex = actorId % dispatcherCount
 IAskActorRef actorRef = actorSystem.SpawnOnDispatcher<SampleActor>(0);
 ```
 
-Use this when the actor must run on a specific dispatcher.
+Use this when an actor must run on a specific dispatcher.
 
 ---
 
@@ -169,9 +177,7 @@ Use this when the actor must run on a specific dispatcher.
 ```csharp
 IAskActorRef actorRef = actorSystem.Spawn(() => new SampleActor());
 
-IAskActorRef actorRef2 = actorSystem.SpawnOnDispatcher(
-    () => new SampleActor(),
-    0);
+IAskActorRef actorRef2 = actorSystem.SpawnOnDispatcher(() => new SampleActor(), 0);
 ```
 
 ---
@@ -182,10 +188,10 @@ IAskActorRef actorRef2 = actorSystem.SpawnOnDispatcher(
 IAskActorRef actorRef = actorSystem.Spawn<SampleActor>(alias: "sample");
 ```
 
-Resolve later:
+Resolve the reference later:
 
 ```csharp
-if (actorSystem.TryGetActorRef("sample", out var actorRef))
+if (actorSystem.TryGetActorRef("sample", out IActorRef actorRef))
 {
 }
 ```
@@ -200,23 +206,21 @@ IAskActorRef actorRef = actorSystem.Spawn<SampleActor>(
     mailboxCapacity: 2048);
 ```
 
+Mailbox capacity is bounded. A message that cannot be accepted because the mailbox is full is published as a dead letter.
+
 ---
 
 ## Sending Messages
 
-Actors communicate only through messages.
+Actors communicate through messages.
 
-`Post` sends a message to an actor without waiting for a response.
-
-The message is enqueued into the target actor mailbox and processed later by the actor dispatcher.
-
-Use `Post` when the caller does not need a return value.
+`Post` sends a message without waiting for a response.
 
 ```csharp
 actorRef.Post(new PingMessage());
 ```
 
-Messages must implement:
+Messages must implement `IActorMessage`.
 
 ```csharp
 public readonly struct PingMessage : IActorMessage
@@ -224,11 +228,31 @@ public readonly struct PingMessage : IActorMessage
 }
 ```
 
-`Post` is fire-and-forget.
+`Post` is fire-and-forget. The caller does not receive a result from the target actor.
 
-The caller does not receive a result from the target actor, and the call only represents message delivery to the actor reference.
+The runtime attempts to enqueue the message into the target actor mailbox for later processing by its dispatcher.
 
-If the target actor needs to send another message later, it should do so explicitly through another actor reference.
+A message is published as a dead letter when it cannot be delivered because:
+
+- the mailbox is full
+- the target actor has stopped
+- the recipient reference is invalidated
+- the actor system has been disposed
+
+---
+
+## Dead Letters
+
+Subscribe to `ActorSystem.OnDeadLetterDetected` to observe undeliverable messages and actor execution failures.
+
+```csharp
+actorSystem.OnDeadLetterDetected += deadLetterMessage =>
+{
+    // Inspect deadLetterMessage.Reason and deadLetterMessage.Message.
+};
+```
+
+Dead letters are useful for operational monitoring and diagnosing delivery failures. They should not be used as a normal request/response path.
 
 ---
 
@@ -236,8 +260,8 @@ If the target actor needs to send another message later, it should do so explici
 
 `Ask` is used when the caller needs a response from an actor.
 
-Use `Post` for fire-and-forget messages when no response is needed.  
-Use `Ask` when the caller must wait for a response from the target actor.
+Use `Post` for fire-and-forget messages.  
+Use `Ask` only when the response is required for the next control-flow step.
 
 ```csharp
 CreateRoomResponse response = await actorRef.AskAsync<CreateRoomResponse>(
@@ -262,7 +286,7 @@ public sealed class CreateRoomResponse : IActorMessage
 }
 ```
 
-When handling an Ask request, the receiving actor should send the response message back to `sender`.
+When handling an Ask request, send the response message back to `sender`.
 
 ```csharp
 sender.Post(new CreateRoomResponse()
@@ -272,18 +296,22 @@ sender.Post(new CreateRoomResponse()
 }, Self);
 ```
 
-The Ask runtime internally tracks the request and completes the waiting task when the response message is posted to the Ask reply reference.
+The Ask runtime internally tracks the pending operation and completes it when the response message is posted to the Ask reply reference.
+
+`AskAsync<TResponse>` returns a `ValueTask<TResponse>`. Await the returned value once and do not store or reuse it after completion.
 
 The response type must match the type requested by `AskAsync<TResponse>`.
 
-`Ask` is intended for control-flow operations such as:
+If no response is received before the supplied timeout, the Ask operation completes with a timeout failure.
+
+Use Ask for control-flow operations such as:
 
 - room creation
 - database queries
 - server-side commands
 - management requests
 
-Do not use `Ask` for high-frequency game-loop messages.
+Do not use Ask for high-frequency game-loop messages.
 
 ---
 
@@ -291,7 +319,7 @@ Do not use `Ask` for high-frequency game-loop messages.
 
 Use `Post` when the caller only needs to send a message.
 
-Use `Ask` when the caller needs to wait for a response.
+Use `Ask` when the caller must wait for a response.
 
 ```text
 Post
@@ -302,13 +330,11 @@ caller continues immediately
 ```text
 Ask
 caller -> target actor mailbox
-caller waits for response task
+caller awaits response
 target actor -> sender.Post(response, Self)
 ```
 
 In most actor flows, prefer `Post`.
-
-Use `Ask` only when the response is required for the next control-flow step.
 
 ---
 
@@ -325,6 +351,7 @@ public sealed class SampleActor : ActorBase
     {
         if (message is PingMessage)
         {
+            // Handle the message.
         }
 
         return ValueTask.CompletedTask;
@@ -379,6 +406,16 @@ CreateRoomResponse response = await roomManagerActorRef.AskAsync<CreateRoomRespo
 
 ---
 
+## Lifecycle
+
+- an actor is created through `Spawn`
+- incoming messages are queued in the actor mailbox
+- the assigned dispatcher executes messages sequentially
+- `Kill` marks the actor for termination
+- the actor is removed after its kill operation is finalized
+
+---
+
 ## Benchmark
 
 Local in-process ping-pong benchmark.
@@ -424,22 +461,13 @@ Notes:
 
 ---
 
-## Lifecycle
-
-- actor is created via `Spawn`
-- messages are queued in mailbox
-- dispatcher executes messages sequentially
-- actor is removed when killed
-
----
-
 ## Summary
 
-- `ActorSystem` → creates and manages actors
-- `ActorBase` → implements actor logic
-- `IActorRef` → sends messages
+- `ActorSystem` → creates, registers, routes to, and manages actors
+- `ActorBase` → implements actor logic and owns actor-local state
+- `IActorRef` → sends messages and controls actor lifetime
 - `IAskActorRef` → sends request/response messages
-- `Dispatcher` → executes actors
+- `Dispatcher` → schedules actor execution
 - `IActorMessage` → defines actor messages
 
 ---
@@ -449,7 +477,7 @@ Notes:
 Use `Dignus.Actor.Core` when you need:
 
 - actor-based concurrency
-- deterministic execution
+- sequential processing per entity
 - message-driven architecture
-- isolation between components
+- isolated actor-local state
 - request/response messaging between actors

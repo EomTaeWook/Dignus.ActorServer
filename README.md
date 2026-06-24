@@ -4,7 +4,7 @@
 [![Actor.Core](https://img.shields.io/nuget/v/Dignus.Actor.Core.svg?label=Actor.Core)](https://www.nuget.org/packages/Dignus.Actor.Core)
 [![ActorServer](https://img.shields.io/nuget/v/Dignus.ActorServer.svg?label=ActorServer)](https://www.nuget.org/packages/Dignus.ActorServer)
 
-High-performance actor-based runtime and network server framework.
+High-performance actor runtime and network server framework.
 
 ---
 
@@ -17,7 +17,7 @@ It is designed around:
 
 - Single-threaded actor execution
 - Message-based concurrency
-- Zero shared mutable state
+- Isolated mutable actor state
 - Minimal network overhead
 
 ---
@@ -66,6 +66,7 @@ Includes:
 - `IActorRef`
 - `IAskActorRef`
 - Request/response messaging through Ask
+- Dead-letter publication for undeliverable messages
 
 Does NOT include:
 
@@ -91,11 +92,12 @@ Includes:
 
 ## Core Characteristics
 
-- Single-threaded execution per actor
-- No shared mutable state
-- Dedicated dispatcher threads (no ThreadPool usage)
-- Lock-free message scheduling
-- Deterministic execution model
+- Sequential execution per actor
+- Isolated mutable actor state
+- Actor scheduling uses dedicated dispatcher threads
+- Low-overhead dispatcher scheduling
+- Predictable actor-local execution
+- Message-based communication between actors
 
 ---
 
@@ -146,7 +148,7 @@ public sealed class SampleActor : ActorBase
     {
         if (message is PingMessage)
         {
-            // handle message
+            // Handle the message.
         }
 
         return ValueTask.CompletedTask;
@@ -161,9 +163,10 @@ public sealed class SampleActor : ActorBase
 Use this framework when you need:
 
 - High-throughput network servers
-- Actor-based concurrency model
-- Deterministic execution per entity
+- Actor-based concurrency
+- Sequential processing per entity
 - Clear separation between runtime and transport
+- Message-driven system design
 
 ---
 
