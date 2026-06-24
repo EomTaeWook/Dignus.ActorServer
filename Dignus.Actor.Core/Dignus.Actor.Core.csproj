@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dignus" Version="1.1.4" />
+    <PackageReference Include="Dignus" Version="1.2.0" />
   </ItemGroup>
 
   <ItemGroup>

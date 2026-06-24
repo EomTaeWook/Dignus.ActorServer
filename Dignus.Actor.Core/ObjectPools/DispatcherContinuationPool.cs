@@ -2,26 +2,32 @@
 // Licensed under the MIT License. See LICENSE file in the project root.
 
 using Dignus.Actor.Core.Internals;
-using Dignus.Framework;
+using Dignus.Collections;
 
 namespace Dignus.Actor.Core.ObjectPools
 {
     internal class DispatcherContinuationPool
     {
-        private class InnerPool : ObjectPoolBase<DispatcherContinuation>
+        private class InnerPool
         {
             private readonly DispatcherContinuationPool _parentPool;
+            private readonly ArrayQueue<DispatcherContinuation> _itemContainer = new ArrayQueue<DispatcherContinuation>();
             public InnerPool(DispatcherContinuationPool parentPool)
             {
                 _parentPool = parentPool;
             }
-            public override DispatcherContinuation CreateItem()
+            public DispatcherContinuation Pop()
             {
-                var item = new DispatcherContinuation(_parentPool);
-                return item;
+                if (_itemContainer.TryRead(out DispatcherContinuation item))
+                {
+                    return item;
+                }
+
+                return new DispatcherContinuation(_parentPool);
             }
-            public override void Remove(DispatcherContinuation item)
+            public void Push(DispatcherContinuation item)
             {
+                _itemContainer.Add(item);
             }
         }
 

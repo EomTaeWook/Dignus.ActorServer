@@ -18,7 +18,7 @@ namespace Dignus.Actor.Core.Dispatcher
 
         private readonly int _dispatcherId;
 
-        private readonly MpscUnboundedQueue<IDispatcherSchedulable> _scheduledActors = new MpscUnboundedQueue<IDispatcherSchedulable>();
+        private readonly SynchronizedArrayQueue<IDispatcherSchedulable> _scheduledActors = new SynchronizedArrayQueue<IDispatcherSchedulable>();
 
         private readonly DispatcherContinuationPool _dispatcherContinuationPool = new DispatcherContinuationPool();
         private volatile bool _isStopped;
