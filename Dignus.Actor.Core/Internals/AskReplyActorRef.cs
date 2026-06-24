@@ -38,27 +38,23 @@ namespace Dignus.Actor.Core.Internals
                 throw new ArgumentNullException(nameof(message));
             }
 
-            SetResponse(message);
-        }
-
-        public void SetTimeout()
-        {
-            _taskCompletionSource.TrySetException(new TimeoutException());
-        }
-        private void SetResponse(IActorMessage responseMessage)
-        {
             if (_askSystem.TryRemove(_requestId) == false)
             {
                 return;
             }
 
-            if (responseMessage is TResponse response)
+            if (message is TResponse response)
             {
                 _taskCompletionSource.TrySetResult(response);
                 return;
             }
 
-            _taskCompletionSource.TrySetException(new InvalidOperationException($"Ask response type mismatch. expected:{typeof(TResponse).Name}, actual:{responseMessage.GetType().Name}"));
+            _taskCompletionSource.TrySetException(new InvalidOperationException($"Ask response type mismatch. expected:{typeof(TResponse).Name}, actual:{message.GetType().Name}"));
+        }
+
+        public void SetTimeout()
+        {
+            _taskCompletionSource.TrySetException(new TimeoutException());
         }
         public void Post(in ActorMail actorMail)
         {
