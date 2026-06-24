@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Dignus.Actor.Core.Internals
 {
-    internal class ActorRunner : IActorSchedulable
+    internal class ActorRunner : IDispatcherSchedulable
     {
         private readonly ActorBase _actor;
         private readonly ActorDispatcher _dispatcher;

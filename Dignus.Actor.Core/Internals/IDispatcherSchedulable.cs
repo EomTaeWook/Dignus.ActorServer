@@ -3,7 +3,7 @@
 
 namespace Dignus.Actor.Core.Internals
 {
-    internal interface IActorSchedulable
+    internal interface IDispatcherSchedulable
     {
         void Execute();
     }

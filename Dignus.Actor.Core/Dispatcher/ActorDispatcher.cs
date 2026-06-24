@@ -18,7 +18,7 @@ namespace Dignus.Actor.Core.Dispatcher
 
         private readonly int _dispatcherId;
 
-        private readonly SynchronizedArrayQueue<IActorSchedulable> _scheduledActors = new SynchronizedArrayQueue<IActorSchedulable>();
+        private readonly MpscUnboundedQueue<IDispatcherSchedulable> _scheduledActors = new MpscUnboundedQueue<IDispatcherSchedulable>();
 
         private readonly DispatcherContinuationPool _dispatcherContinuationPool = new DispatcherContinuationPool();
         private volatile bool _isStopped;
@@ -62,7 +62,7 @@ namespace Dignus.Actor.Core.Dispatcher
 
                 Interlocked.Exchange(ref _signalPending, 0);
 
-                while (_scheduledActors.TryRead(out IActorSchedulable actorSchedulable))
+                while (_scheduledActors.TryRead(out IDispatcherSchedulable actorSchedulable))
                 {
                     actorSchedulable.Execute();
 
@@ -94,7 +94,7 @@ namespace Dignus.Actor.Core.Dispatcher
             _signal.Dispose();
         }
 
-        internal void Schedule(IActorSchedulable actorSchedulable)
+        internal void Schedule(IDispatcherSchedulable actorSchedulable)
         {
             if(_isStopped == true)
             {

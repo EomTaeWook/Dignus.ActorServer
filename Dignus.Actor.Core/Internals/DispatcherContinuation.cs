@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace Dignus.Actor.Core.Internals
 {
-    internal class DispatcherContinuation : IActorSchedulable
+    internal class DispatcherContinuation : IDispatcherSchedulable
     {
         private SendOrPostCallback _sendOrPostCallback;
         private object _state;
