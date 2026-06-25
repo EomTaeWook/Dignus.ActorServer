@@ -12,9 +12,7 @@ namespace Dignus.Actor.Core.Internals
     {
         private const int TimeoutSweepIntervalMilliseconds = 100;
 
-        private long _nextRequestId;
-
-        private readonly ConcurrentDictionary<long, IAskTimeout> _askReplyActorRefByRequestId = new ConcurrentDictionary<long, IAskTimeout>();
+        private readonly ConcurrentDictionary<IAskTimeout, byte> _askReplyActorRefs = new ConcurrentDictionary<IAskTimeout, byte>();
         private readonly Thread _timeoutSweepThread;
         private readonly AutoResetEvent _sweepSignal = new AutoResetEvent(false);
 
@@ -40,59 +38,61 @@ namespace Dignus.Actor.Core.Internals
                     break;
                 }
 
-                if (_askReplyActorRefByRequestId.IsEmpty)
+                if (_askReplyActorRefs.IsEmpty)
                 {
                     Interlocked.Exchange(ref _isSweepSignaled, 0);
 
-                    if (_askReplyActorRefByRequestId.IsEmpty)
+                    if (_askReplyActorRefs.IsEmpty)
                     {
                         _sweepSignal.WaitOne();
+                        continue;
                     }
 
+                    Interlocked.CompareExchange(ref _isSweepSignaled, 1, 0);
                     continue;
                 }
 
-                long currentUtcTicks = DateTime.UtcNow.Ticks;
+                long now = DateTime.UtcNow.Ticks;
 
-                foreach (var askAwaiterByRequestId in _askReplyActorRefByRequestId)
+                foreach (var item in _askReplyActorRefs)
                 {
-                    if (askAwaiterByRequestId.Value.DeadlineAtTicks > currentUtcTicks)
+                    if (item.Key.DeadlineAtTicks > now)
                     {
                         continue;
                     }
 
-                    OnTimeout(askAwaiterByRequestId.Key);
+                    OnTimeout(item.Key);
                 }
 
-                Thread.Sleep(TimeoutSweepIntervalMilliseconds);
+                _sweepSignal.WaitOne(TimeoutSweepIntervalMilliseconds);
             }
         }
 
-        internal bool TryRemove(long requestId)
+        internal bool TryRemove(IAskTimeout askTimeout)
         {
-            return _askReplyActorRefByRequestId.TryRemove(requestId, out _);
+            return _askReplyActorRefs.TryRemove(askTimeout, out _);
         }
 
-        private void OnTimeout(long requestId)
+        private void OnTimeout(IAskTimeout askTimeout)
         {
-            if (_askReplyActorRefByRequestId.TryRemove(requestId, out var askAwaiter) == false)
+            if (TryRemove(askTimeout) == false)
             {
                 return;
             }
-            askAwaiter.SetTimeout();
+
+            askTimeout.SetTimeout();
         }
 
         internal AskReplyActorRef<TResponse> Register<TResponse>(TimeSpan timeout) where TResponse : IActorMessage
         {
-            long requestId = Interlocked.Increment(ref _nextRequestId);
-            var askAwaiter = new AskReplyActorRef<TResponse>(requestId, this, timeout);
+            var askAwaiter = new AskReplyActorRef<TResponse>(this, timeout);
 
-            if (_askReplyActorRefByRequestId.TryAdd(requestId, askAwaiter) == false)
+            if (_askReplyActorRefs.TryAdd(askAwaiter, 0) == false)
             {
-                throw new InvalidOperationException($"failed to register ask request. requestId:{requestId}");
+                throw new InvalidOperationException("failed to register ask request.");
             }
 
-            if (Interlocked.Exchange(ref _isSweepSignaled, 1) == 0)
+            if (Interlocked.CompareExchange(ref _isSweepSignaled, 1, 0) == 0)
             {
                 _sweepSignal.Set();
             }
@@ -106,6 +106,7 @@ namespace Dignus.Actor.Core.Internals
             {
                 return;
             }
+
             _sweepSignal.Set();
 
             if (Thread.CurrentThread != _timeoutSweepThread)
@@ -113,10 +114,11 @@ namespace Dignus.Actor.Core.Internals
                 _timeoutSweepThread.Join();
             }
 
-            foreach (var askAwaiterByRequestId in _askReplyActorRefByRequestId)
+            foreach (var askAwaiter in _askReplyActorRefs.Keys)
             {
-                OnTimeout(askAwaiterByRequestId.Key);
+                OnTimeout(askAwaiter);
             }
+
             _sweepSignal.Dispose();
         }
     }

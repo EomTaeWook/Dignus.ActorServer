@@ -15,13 +15,11 @@ namespace Dignus.Actor.Core.Internals
         public long DeadlineAtTicks => _deadlineAtTicks;
 
         private readonly long _deadlineAtTicks;
-        private readonly long _requestId;
         private readonly AskSystem _askSystem;
         private readonly TaskCompletionSource<TResponse> _taskCompletionSource;
 
-        public AskReplyActorRef(long requestId, AskSystem askSystem, TimeSpan timeout)
+        public AskReplyActorRef(AskSystem askSystem, TimeSpan timeout)
         {
-            _requestId = requestId;
             _askSystem = askSystem;
             _deadlineAtTicks = DateTime.UtcNow.Add(timeout).Ticks;
             _taskCompletionSource = new TaskCompletionSource<TResponse>();
@@ -38,7 +36,7 @@ namespace Dignus.Actor.Core.Internals
                 throw new ArgumentNullException(nameof(message));
             }
 
-            if (_askSystem.TryRemove(_requestId) == false)
+            if (_askSystem.TryRemove(this) == false)
             {
                 return;
             }

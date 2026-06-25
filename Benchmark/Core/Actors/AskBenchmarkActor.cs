@@ -8,13 +8,9 @@ namespace Core.Actors
     {
         protected override ValueTask OnReceive(IActorMessage message, IActorRef sender)
         {
-            if (message is AskPingMessage askPingMessage)
+            if (message is AskPingMessage)
             {
-                sender.Post(new AskPongMessage()
-                {
-                    RequestId = askPingMessage.RequestId,
-                    Ok = true
-                }, Self);
+                sender.Post(AskPongMessage.OkInstance, Self);
             }
             return ValueTask.CompletedTask;
         }

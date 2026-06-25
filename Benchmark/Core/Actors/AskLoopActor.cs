@@ -9,6 +9,8 @@ namespace Core.Actors
         private readonly IAskActorRef _target;
         private readonly AskBenchmarkState _state;
 
+        public long Count;
+
         public AskLoopActor(IAskActorRef target, AskBenchmarkState state)
         {
             _target = target;
@@ -21,10 +23,10 @@ namespace Core.Actors
             {
                 while (_state.IsRunning)
                 {
-                    var response = await _target.AskAsync<AskPongMessage>(new AskPingMessage(), 3000);
+                    var response = await _target.AskAsync<AskPongMessage>(AskPingMessage.Instance, 3000);
                     if (response.Ok)
                     {
-                        _state.Increment();
+                        Count++;
                     }
                 }
             }

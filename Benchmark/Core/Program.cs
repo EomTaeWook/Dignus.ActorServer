@@ -144,12 +144,15 @@ internal class Program
 
         var state = new AskBenchmarkState();
 
+        var askers = new List<AskLoopActor>(targetCount * askersPerTarget);
         var askerRefs = new List<IAskActorRef>(targetCount * askersPerTarget);
         foreach (var targetRef in targetRefs)
         {
             for (int askerIndex = 0; askerIndex < askersPerTarget; askerIndex++)
             {
-                askerRefs.Add(actorSystem.Spawn(() => new AskLoopActor(targetRef, state), mailboxCapacity: 4)!);
+                var asker = new AskLoopActor(targetRef, state);
+                askers.Add(asker);
+                askerRefs.Add(actorSystem.Spawn(() => asker, mailboxCapacity: 4)!);
             }
         }
 
@@ -165,7 +168,11 @@ internal class Program
         state.Stop();
         stopwatch.Stop();
 
-        long completedCount = state.CompletedCount;
+        long completedCount = 0;
+        foreach (var asker in askers)
+        {
+            completedCount += asker.Count;
+        }
 
         Console.WriteLine($"Target Count: {targetCount:N0}");
         Console.WriteLine($"Askers Per Target: {askersPerTarget:N0}");
