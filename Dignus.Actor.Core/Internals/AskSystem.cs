@@ -92,6 +92,11 @@ namespace Dignus.Actor.Core.Internals
                 throw new InvalidOperationException("failed to register ask request.");
             }
 
+            if(_isSweepSignaled == 1)
+            {
+                return askAwaiter;
+            }
+
             if (Interlocked.CompareExchange(ref _isSweepSignaled, 1, 0) == 0)
             {
                 _sweepSignal.Set();
