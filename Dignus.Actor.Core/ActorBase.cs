@@ -46,7 +46,7 @@ namespace Dignus.Actor.Core
                 throw new InvalidOperationException($"Actor is running outside its dispatcher context. Expected Dispatcher-{Dispatcher.Id}");
             }
 
-            if (actorDispatcher.Id != Dispatcher.Id)
+            if (ReferenceEquals(ActorDispatcher.CurrentActorDispatcher, Dispatcher) == false)
             {
                 throw new InvalidOperationException($"Actor Dispatcher-{Dispatcher.Id} vs Current Dispatcher-{actorDispatcher.Id}");
             }
