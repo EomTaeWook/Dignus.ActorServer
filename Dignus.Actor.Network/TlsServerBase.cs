@@ -198,12 +198,5 @@ namespace Dignus.Actor.Network
         {
             OnDeadLetterMessage(obj);
         }
-        public void Broadcast(byte[] bytes)
-        {
-            foreach (var session in _sessionActors.Values)
-            {
-                session.NetworkSession.SendAsync(bytes);
-            }
-        }
     }
 }

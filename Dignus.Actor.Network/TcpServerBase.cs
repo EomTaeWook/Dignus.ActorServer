@@ -175,12 +175,5 @@ namespace Dignus.Actor.Network
                 _actorSystem.Dispose();
             }
         }
-        public void Broadcast(byte[] bytes)
-        {
-            foreach(var session in _sessionActors.Values)
-            {
-                session.NetworkSession.SendAsync(bytes);
-            }
-        }
     }
 }
