@@ -169,6 +169,7 @@ namespace Dignus.Actor.Network
         }
         public void Dispose()
         {
+            Close();
             _actorSystem.OnDeadLetterDetected -= OnDeadLetterDetected;
             if (isActorSystemOwner)
             {
