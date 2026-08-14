@@ -22,7 +22,7 @@ namespace Dignus.Actor.Core.Internals
         {
             _askSystem = askSystem;
             _deadlineAtTicks = DateTime.UtcNow.Add(timeout).Ticks;
-            _taskCompletionSource = new TaskCompletionSource<TResponse>();
+            _taskCompletionSource = new TaskCompletionSource<TResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
         public void Kill()
