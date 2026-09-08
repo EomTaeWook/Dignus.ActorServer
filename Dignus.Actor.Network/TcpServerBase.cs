@@ -15,7 +15,7 @@ using System.Net;
 
 namespace Dignus.Actor.Network
 {
-    public abstract class TcpServerBase<TSessionActor> : IActorHostHandler, IActorRefResolver
+    public abstract class TcpServerBase<TSessionActor> : IActorHostHandler, ISessionActorRefResolver
         where TSessionActor : SessionActorBase
     {
         protected abstract TSessionActor CreateSessionActor();
@@ -97,17 +97,12 @@ namespace Dignus.Actor.Network
         public bool TryGetActorRef(long sessionId, out IActorRef actorRef)
         {
             actorRef = null;
-            if(_sessionActors.TryGetValue(sessionId, out var sessionActor))
+            if(_sessionActors.TryGetValue(sessionId, out var sessionActor) == false)
             {
-                actorRef = sessionActor.Self;
-                return true;
+                return false;
             }
-            return false;
-        }
-
-        bool IActorRefResolver.TryGetActorRef(string alias, out IActorRef actorRef)
-        {
-            return _actorSystem.TryGetActorRef(alias, out actorRef);
+            actorRef = sessionActor.Self;
+            return true;
         }
 
         void IActorHostHandler.OnAccepted(ISession session)
@@ -142,14 +137,15 @@ namespace Dignus.Actor.Network
 
         void IActorHostHandler.OnDisconnected(ISession session)
         {
-            if (_sessionActors.TryRemove(session.Id, out var sessionActor))
+            if (_sessionActors.TryRemove(session.Id, out var sessionActor) == false)
             {
-                if(sessionActor.NetworkSession != null)
-                {
-                    OnDisconnected(sessionActor.NetworkSession);
-                }
-                sessionActor.SelfActorRef.Kill();
+                return;
             }
+            if (sessionActor.NetworkSession != null)
+            {
+                OnDisconnected(sessionActor.NetworkSession);
+            }
+            sessionActor.SelfActorRef.Kill();
         }
         public void Start(string ip, int port, int backlog)
         {

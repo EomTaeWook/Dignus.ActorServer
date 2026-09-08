@@ -16,8 +16,8 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Dignus.Actor.Network
 {
-    public abstract class TlsServerBase<TSessionActor> 
-        : IActorTlsHostHandler, IActorRefResolver where TSessionActor : SessionActorBase
+    public abstract class TlsServerBase<TSessionActor> : IActorTlsHostHandler, ISessionActorRefResolver
+        where TSessionActor : SessionActorBase
     {
         protected abstract TSessionActor CreateSessionActor();
         protected abstract void OnAccepted(INetworkSessionRef connectedSessionRef);
@@ -163,14 +163,16 @@ namespace Dignus.Actor.Network
 
         void IActorHostHandler.OnDisconnected(ISession session)
         {
-            if (_sessionActors.TryRemove(session.Id, out var sessionActor))
+            if(_sessionActors.TryRemove(session.Id, out var sessionActor) == false)
             {
-                if(sessionActor.NetworkSession != null)
-                {
-                    OnDisconnected(sessionActor.NetworkSession);
-                }
-                sessionActor.SelfActorRef.Kill();
+                return;
             }
+
+            if (sessionActor.NetworkSession != null)
+            {
+                OnDisconnected(sessionActor.NetworkSession);
+            }
+            sessionActor.SelfActorRef.Kill();
         }
 
         void IActorTlsHostHandler.OnHandshaking(ISession session)
@@ -180,17 +182,14 @@ namespace Dignus.Actor.Network
         public bool TryGetActorRef(long sessionId, out IActorRef actorRef)
         {
             actorRef = null;
-            if (_sessionActors.TryGetValue(sessionId, out var session))
+            if (_sessionActors.TryGetValue(sessionId, out var session) == false)
             {
-                actorRef = session.Self;
-                return true;
+                return false;
             }
-            return false;
+            actorRef = session.Self;
+            return true;
         }
-        bool IActorRefResolver.TryGetActorRef(string alias, out IActorRef actorRef)
-        {
-            return _actorSystem.TryGetActorRef(alias, out actorRef);
-        }
+
         void IActorTlsHostHandler.OnHandshakeFailed(ISession session, Exception ex)
         {
             OnHandshakeFailed(session, ex);

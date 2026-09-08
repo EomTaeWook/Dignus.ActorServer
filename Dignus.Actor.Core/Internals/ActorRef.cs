@@ -10,17 +10,17 @@ namespace Dignus.Actor.Core.Internals
 {
     internal class ActorRef : IAskActorRef
     {
-        public long Id { get => _id; }
+        public long ActorId { get => _actorId; }
         public string Alias { get => _alias; }
 
         private readonly ActorSystem _actorSystem;
-        private readonly long _id;
+        private readonly long _actorId;
         private readonly string _alias;
 
-        public ActorRef(ActorSystem actorSystem, long id, string alias)
+        public ActorRef(ActorSystem actorSystem, long actorId, string alias)
         {
             _actorSystem = actorSystem;
-            _id = id;
+            _actorId = actorId;
             _alias = alias;
         }
 
@@ -30,16 +30,16 @@ namespace Dignus.Actor.Core.Internals
             {
                 throw new ArgumentNullException(nameof(message));
             }
-            _actorSystem.Post(_id, message, sender);
+            _actorSystem.Post(_actorId, message, sender);
         }
         public void Post(in ActorMail actorMail)
         {
-            _actorSystem.Post(_id, in actorMail);
+            _actorSystem.Post(_actorId, in actorMail);
         }
 
         public void Kill()
         {
-            _actorSystem.Kill(_id);
+            _actorSystem.Kill(_actorId);
         }
         public ValueTask<TResponse> AskAsync<TResponse>(IActorMessage message, int timeoutMilliseconds) where TResponse : IActorMessage
         {

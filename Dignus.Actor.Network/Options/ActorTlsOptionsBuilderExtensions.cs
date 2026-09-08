@@ -41,7 +41,7 @@ namespace Dignus.Actor.Network.Options
         public static TBuilder UseTlsOptions<TBuilder>(
             this TBuilder builder,
             X509Certificate2 certificate,
-            SslProtocols enabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
+            SslProtocols enabledSslProtocols = SslProtocols.None,
             bool clientCertificateRequired = false,
             bool checkCertificateRevocation = false,
             RemoteCertificateValidationCallback remoteCertificateValidationCallback = null)

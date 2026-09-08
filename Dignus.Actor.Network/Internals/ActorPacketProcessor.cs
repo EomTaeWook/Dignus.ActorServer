@@ -11,12 +11,11 @@ using System.Threading.Tasks;
 
 namespace Dignus.Actor.Network.Internals
 {
-    internal class ActorPacketProcessor(IActorMessageDecoder decoder,
-        IActorRefResolver actorRefResolver) : PacketProcessor
+    internal class ActorPacketProcessor(IActorMessageDecoder decoder, ISessionActorRefResolver sessionActorRefResolver) : PacketProcessor
     {
         protected override Task ProcessPacketAsync(ISession session, ArraySegment<byte> packet)
         {
-            if (actorRefResolver.TryGetActorRef(session.Id, out IActorRef actorRef) == false)
+            if (sessionActorRefResolver.TryGetActorRef(session.Id, out IActorRef actorRef) == false)
             {
                 return Task.CompletedTask;
             }

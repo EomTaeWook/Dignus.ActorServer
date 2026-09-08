@@ -14,7 +14,7 @@ using System.Threading;
 
 namespace Dignus.Actor.Core
 {
-    public class ActorSystem : IActorRefResolver, IDeadLetterPublisher
+    public class ActorSystem : IDeadLetterPublisher
     {
         public event Action<DeadLetterMessage> OnDeadLetterDetected;
 
@@ -163,46 +163,41 @@ namespace Dignus.Actor.Core
         }
         internal void Kill(long actorId)
         {
-            if (_actorRunners.TryGetValue(actorId, out var actorRunner))
+            if (_actorRunners.TryGetValue(actorId, out var actorRunner) == false)
             {
-                actorRunner.Kill();
+                return;
             }
+            actorRunner.Kill();
         }
         internal void FinalizeKill(long actorId)
         {
-            if(_actorRunners.TryRemove(actorId, out var actorRunner))
+            if (_actorRunners.TryRemove(actorId, out var actorRunner) == false)
             {
-                var actor = actorRunner.GetActor();
-
-                if(string.IsNullOrEmpty(actor.SelfActorRef.Alias) == false)
-                {
-                    _aliasToId.TryRemove(actor.SelfActorRef.Alias, out _);
-                }
+                return;
             }
-        }
-        bool IActorRefResolver.TryGetActorRef(long actorId, out IActorRef actorRef)
-        {
-            return TryGetActorRef(actorId, out actorRef);
-        }
 
-        internal bool TryGetActorRef(long actorId, out IActorRef actorRef)
-        {
-            actorRef = null;
-            if (_actorRunners.TryGetValue(actorId, out var actorRunner))
+            var actor = actorRunner.GetActor();
+
+            if (string.IsNullOrEmpty(actor.SelfActorRef.Alias) == false)
             {
-                actorRef = actorRunner.GetActor().Self;
-                return true;
+                _aliasToId.TryRemove(actor.SelfActorRef.Alias, out _);
             }
-            return false;
         }
         public bool TryGetActorRef(string alias, out IActorRef actorRef)
         {
             actorRef = null;
-            if (_aliasToId.TryGetValue(alias, out long actorId))
+            if (_aliasToId.TryGetValue(alias, out long actorId) == false)
             {
-                return TryGetActorRef(actorId, out actorRef);
+                return false;
             }
-            return false;
+
+            if (_actorRunners.TryGetValue(actorId, out var actorRunner) == false)
+            {
+                return false;
+            }
+
+            actorRef = actorRunner.GetActor().Self;
+            return true;
         }
         void IDeadLetterPublisher.Publish(DeadLetterMessage deadLetterMessage)
         {

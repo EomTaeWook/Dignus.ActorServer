@@ -171,7 +171,7 @@ namespace Dignus.Actor.Core.Internals
             {
             }
             _actor.KillInternal();
-            _onFinalize(_actor.SelfActorRef.Id);
+            _onFinalize(_actor.SelfActorRef.ActorId);
         }
         private void OnReceiveCompleted()
         {
@@ -199,7 +199,7 @@ namespace Dignus.Actor.Core.Internals
             _deadLetterPublisher.Publish(new DeadLetterMessage(
                 new ActorExceptionMessage(ex),
                 null,
-                _actor.SelfActorRef.Id,
+                _actor.SelfActorRef.ActorId,
                 DeadLetterReason.ExecutionException));
         }
     }
