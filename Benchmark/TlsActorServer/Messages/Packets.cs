@@ -1,6 +1,6 @@
 ﻿using Dignus.Actor.Abstractions;
 
-namespace TcpActorServer.Messages
+namespace TlsActorServer.Messages
 {
     internal class EchoMessage : IActorMessage
     {

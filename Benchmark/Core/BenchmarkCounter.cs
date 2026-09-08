@@ -5,17 +5,11 @@
         public volatile bool IsRunning;
     }
 
-    internal sealed class BenchmarkCounter
+    internal sealed class BenchmarkCounter(long targetMessageCount)
     {
-        private readonly long _targetMessageCount;
-        private readonly TaskCompletionSource<bool> _taskCompletionSource;
+        private readonly long _targetMessageCount = targetMessageCount;
+        private readonly TaskCompletionSource<bool> _taskCompletionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         private long _processedMessageCount;
-
-        public BenchmarkCounter(long targetMessageCount)
-        {
-            _targetMessageCount = targetMessageCount;
-            _taskCompletionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        }
 
         public Task CompletedTask
         {

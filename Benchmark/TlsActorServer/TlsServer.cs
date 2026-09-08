@@ -4,7 +4,7 @@ using Dignus.Framework;
 using Dignus.Log;
 using Dignus.Sockets.Interfaces;
 using System.Security.Cryptography.X509Certificates;
-using TcpActorServer.Messages;
+using TlsActorServer.Messages;
 using TlsActorServer.Networks;
 using TlsActorServer.Networks.Codecs;
 

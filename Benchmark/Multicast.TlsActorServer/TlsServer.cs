@@ -10,7 +10,7 @@ namespace Multicast.TlsActorServer
 {
     internal class TlsServer(TlsServerOptions tlsServerOptions) : TlsServerBase<EchoActor>(tlsServerOptions)
     {
-        private ConcurrentDictionary<INetworkSession, byte> _sessions = new ConcurrentDictionary<INetworkSession, byte>();
+        private readonly ConcurrentDictionary<INetworkSession, byte> _sessions = new();
         protected override EchoActor CreateSessionActor()
         {
             return new EchoActor();
