@@ -74,10 +74,7 @@ namespace Dignus.Actor.Core.Internals
         {
             if(Interlocked.CompareExchange(ref _lifecycleState, 1, 0) == 0)
             {
-                if (Interlocked.Exchange(ref _isScheduled, 1) == 0)
-                {
-                    _dispatcher.Schedule(this);
-                }
+                _dispatcher.Schedule(this);
             }
         }
         public void Execute()
@@ -151,7 +148,7 @@ namespace Dignus.Actor.Core.Internals
                 return;
             }
 
-            Volatile.Write(ref _isScheduled, 0);
+            Interlocked.Exchange(ref _isScheduled, 0);
 
             if (_mailbox.TryPeek(out _))
             {

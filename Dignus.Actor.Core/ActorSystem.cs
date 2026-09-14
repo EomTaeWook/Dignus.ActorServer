@@ -6,7 +6,6 @@ using Dignus.Actor.Core.DeadLetter;
 using Dignus.Actor.Core.Dispatcher;
 using Dignus.Actor.Core.Internals;
 using Dignus.Actor.Core.Messages;
-using Dignus.Collections;
 using Dignus.DependencyInjection.Attributes;
 using System;
 using System.Collections.Concurrent;
@@ -27,7 +26,7 @@ namespace Dignus.Actor.Core
         private readonly ConcurrentDictionary<string, long> _aliasToId = new ConcurrentDictionary<string, long>();
         private readonly ActorDispatcher[] _dispatchers;
         private long _nextActorId;
-        private int _isDisposed;
+        private volatile int _isDisposed;
 
         [InjectConstructor]
         public ActorSystem() :this(Environment.ProcessorCount)
@@ -67,8 +66,6 @@ namespace Dignus.Actor.Core
         internal TActor SpawnWithDispatcher<TActor>(TActor actor, int dispatcherIndex, string alias, int mailboxCapacity)
             where TActor : ActorBase
         {
-            ThrowIfDisposed();
-
             if ((uint)dispatcherIndex >= (uint)_dispatchers.Length)
             {
                 throw new ArgumentOutOfRangeException(nameof(dispatcherIndex));
@@ -81,8 +78,6 @@ namespace Dignus.Actor.Core
 
         internal TActor SpawnWithAutoDispatcher<TActor>(TActor actor, string alias, int mailboxCapacity) where TActor : ActorBase
         {
-            ThrowIfDisposed();
-
             var actorId = Interlocked.Increment(ref _nextActorId);
             var dispatcherIndex = actorId % _dispatchers.Length;
             var dispatcher = _dispatchers[dispatcherIndex];
@@ -99,6 +94,8 @@ namespace Dignus.Actor.Core
         private TActor RegisterActor<TActor>(TActor actor, long actorId, ActorDispatcher actorDispatcher, string alias, int mailboxCapacity)
             where TActor : ActorBase
         {
+            ThrowIfDisposed();
+
             var actorRunner = new ActorRunner(actor, actorDispatcher, mailboxCapacity, this, FinalizeKill);
             var actorRef = new ActorRef(this, actorId, alias);
             actor.Initialize(actorDispatcher, actorRef);
@@ -218,9 +215,7 @@ namespace Dignus.Actor.Core
                 return;
             }
 
-            var copy = new ArrayQueue<ActorRunner>(_actorRunners.Values.Count);
-            copy.AddRange(_actorRunners.Values);
-            foreach (var actor in copy)
+            foreach (var actor in _actorRunners.Values)
             {
                 actor.Kill();
             }
