@@ -23,7 +23,6 @@
     <RepositoryUrl>https://github.com/EomTaeWook/Dignus.ActorServer</RepositoryUrl>
     <PackageProjectUrl>https://github.com/EomTaeWook/Dignus.ActorServer</PackageProjectUrl>
     <Description>Actor-based network server framework combining Dignus.Sockets networking with actor message processing.</Description>
-    <PackageTags>actor;server;networking;socket;tcp;tls;udp;messaging;dotnet</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

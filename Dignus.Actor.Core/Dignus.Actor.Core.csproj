@@ -19,7 +19,6 @@
     <RepositoryUrl>https://github.com/EomTaeWook/Dignus.ActorServer</RepositoryUrl>
     <PackageProjectUrl>https://github.com/EomTaeWook/Dignus.ActorServer</PackageProjectUrl>
     <Description>C# actor runtime with message dispatch, actor lifecycle management and asynchronous request/reply support.</Description>
-    <PackageTags>actor;actor-model;concurrency;messaging;async;dotnet</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

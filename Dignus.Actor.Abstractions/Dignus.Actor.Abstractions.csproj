@@ -19,7 +19,6 @@
     <RepositoryUrl>https://github.com/EomTaeWook/Dignus.ActorServer</RepositoryUrl>
     <PackageProjectUrl>https://github.com/EomTaeWook/Dignus.ActorServer</PackageProjectUrl>
     <Description>Shared actor contracts and message abstractions for the Dignus actor framework.</Description>
-    <PackageTags>actor;contracts;abstractions;messaging;dotnet</PackageTags>
   </PropertyGroup>
   
     <ItemGroup>
