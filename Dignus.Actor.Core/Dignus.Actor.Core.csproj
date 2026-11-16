@@ -11,13 +11,15 @@
 
     <Copyright>© 2026 EomTaeWook. Released under the MIT License.</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageIcon>Icon.jpg</PackageIcon>
+    <PackageIcon>Icon.png</PackageIcon>
     <PackageReadmeFile>Dignus.Actor.Core.md</PackageReadmeFile>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
+    <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/EomTaeWook/Dignus.ActorServer</RepositoryUrl>
     <PackageProjectUrl>https://github.com/EomTaeWook/Dignus.ActorServer</PackageProjectUrl>
-    <Description>Core runtime and primitives for building actor-based systems with Dignus ActorSystem.</Description>
+    <Description>C# actor runtime with message dispatch, actor lifecycle management and asynchronous request/reply support.</Description>
+    <PackageTags>actor;actor-model;concurrency;messaging;async;dotnet</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,8 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\LICENSE" Pack="true" PackagePath="/" />
-    <None Include="..\publish\Icon.jpg" Pack="true" PackagePath="/" />
+    <None Include="..\publish\Icon.png" Pack="true" PackagePath="/" />
     <None Include="..\publish\Dignus.Actor.Core.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 

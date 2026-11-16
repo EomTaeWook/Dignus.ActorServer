@@ -15,13 +15,15 @@
     <Copyright>© 2026 EomTaeWook. Released under the MIT License.</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IsPackable>true</IsPackable>
-    <PackageIcon>Icon.jpg</PackageIcon>
+    <PackageIcon>Icon.png</PackageIcon>
     <PackageReadmeFile>Dignus.Actor.Network.md</PackageReadmeFile>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
+    <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/EomTaeWook/Dignus.ActorServer</RepositoryUrl>
     <PackageProjectUrl>https://github.com/EomTaeWook/Dignus.ActorServer</PackageProjectUrl>
-    <Description>Actor-based server framework built on top of Dignus and Dignus.Sockets for scalable message-driven network servers.</Description>
+    <Description>Actor-based network server framework combining Dignus.Sockets networking with actor message processing.</Description>
+    <PackageTags>actor;server;networking;socket;tcp;tls;udp;messaging;dotnet</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,8 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\LICENSE" Pack="true" PackagePath="/" />
-    <None Include="..\publish\Icon.jpg" Pack="true" PackagePath="/" />
+    <None Include="..\publish\Icon.png" Pack="true" PackagePath="/" />
     <None Include="..\publish\Dignus.Actor.Network.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 

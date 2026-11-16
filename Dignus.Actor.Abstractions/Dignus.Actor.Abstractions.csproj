@@ -11,18 +11,19 @@
 
     <Copyright>© 2026 EomTaeWook. Released under the MIT License.</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageIcon>Icon.jpg</PackageIcon>
+    <PackageIcon>Icon.png</PackageIcon>
     <PackageReadmeFile>Dignus.Actor.Abstractions.md</PackageReadmeFile>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
+    <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/EomTaeWook/Dignus.ActorServer</RepositoryUrl>
     <PackageProjectUrl>https://github.com/EomTaeWook/Dignus.ActorServer</PackageProjectUrl>
-    <Description>Minimal shared contracts for the Dignus Actor framework.</Description>
+    <Description>Shared actor contracts and message abstractions for the Dignus actor framework.</Description>
+    <PackageTags>actor;contracts;abstractions;messaging;dotnet</PackageTags>
   </PropertyGroup>
   
     <ItemGroup>
-      <None Include="..\LICENSE" Pack="true" PackagePath="/" />
-      <None Include="..\publish\Icon.jpg" Pack="true" PackagePath="/" />
+      <None Include="..\publish\Icon.png" Pack="true" PackagePath="/" />
       <None Include="..\publish\Dignus.Actor.Abstractions.md" Pack="true" PackagePath="/" />
     </ItemGroup>
 
