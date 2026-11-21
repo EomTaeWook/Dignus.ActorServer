@@ -1,5 +1,7 @@
 # Dignus.Actor.Core
 
+English | [한국어](Dignus.Actor.Core.ko.md)
+
 [English overview](https://github.com/EomTaeWook/Dignus.ActorServer/blob/main/README.md) | [한국어 개요](https://github.com/EomTaeWook/Dignus.ActorServer/blob/main/README.ko.md)
 
 [![NuGet](https://img.shields.io/nuget/v/Dignus.Actor.Core.svg)](https://www.nuget.org/packages/Dignus.Actor.Core/)

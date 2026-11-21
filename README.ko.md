@@ -47,10 +47,10 @@ public class SampleActor : ActorBase
 
 ## 문서
 
-- [구성과 전송 동작 · 영어](docs/Usage.md)
-- [Actor 계약 · 영어](publish/Dignus.Actor.Abstractions.md)
-- [Actor 런타임 API · 영어](publish/Dignus.Actor.Core.md)
-- [네트워크 API · 영어](publish/Dignus.Actor.Network.md)
+- [구성과 전송 동작](docs/Usage.ko.md)
+- [Actor 계약](publish/Dignus.Actor.Abstractions.ko.md)
+- [Actor 런타임 API](publish/Dignus.Actor.Core.ko.md)
+- [네트워크 API](publish/Dignus.Actor.Network.ko.md)
 
 ## 라이선스
 
